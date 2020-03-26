@@ -1,7 +1,7 @@
 Parameters:
   AMI:
     Type: AWS::EC2::Image::Id
-    Default: 'ami-0a6d62d129b1be87d'
+    Default: 'ami-0cc54d00e26d5326d'
   IAMINSTANCEPROFILE:
     Type: String
     Default: arn:aws:iam::319631679975:instance-profile/IAM-role.dev-kdb
@@ -20,6 +20,9 @@ Mappings:
     UserData:
       Bootstrap: |
         #!/bin/bash -x
+        cd /opt/rdb-autoscaling
+        git pull
+        cd ~
         bash /opt/rdb-autoscaling/aws/ec2-userdata.sh
 
 Resources:

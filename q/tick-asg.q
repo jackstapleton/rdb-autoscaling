@@ -14,3 +14,7 @@ system "l asg/u-asg.q"
 / rewrite .u.end to run tick and asg .z.pc
 .tick.end: .u.end;
 .u.end: {.tick.end x; .u.asg.end x;};
+
+.tick.ts:.z.ts;
+.util.hbTime: .z.p;
+.z.ts:{.util.hb[]; .tick.ts[];}

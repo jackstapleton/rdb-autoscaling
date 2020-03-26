@@ -9,6 +9,17 @@ ec2_get_instance_tag () {
     cat $HOME/.ec2-tagdata | python -c "import sys, json; print(''.join([x['Value'] for x in json.load(sys.stdin)['Tags'] if x ['Key'] == '$tag']))"
 }
 
+ec2_get_ip_by_stack_app () {
+    stack=$1
+    app=$2
+
+    res=$(aws ec2 describe-instances \
+        --filters Name=tag:aws:cloudformation:stack-name,Values=$stack Name=tag:APP,Values=$app \
+        --query "Reservations[*].Instances[*].{PrivateIpAddress:PrivateIpAddress}")
+
+    echo $res | python -c "import sys, json; print(([x[0]['PrivateIpAddress'] for x in json.load(sys.stdin) if not x[0]['PrivateIpAddress'] is None])[0])"
+}
+
 ec2_mount_efs () {
     efs_ip=$1
     efs_dir=$2

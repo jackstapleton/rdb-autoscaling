@@ -23,7 +23,8 @@ system "l asg/sub.q"
 .sub.i: 0;
 
 / monitor memory every 5 seconds
-.z.ts: {-1 "HEARTBEAT"; .sub.monitorMemory[]};
+.util.hbTime: .z.p;
+.z.ts: {.sub.monitorMemory[]; .util.hb[];};
 system"t 5000"
 
 / clear data at end of day

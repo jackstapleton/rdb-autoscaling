@@ -1,19 +1,13 @@
 #!/bin/bash
 
-
 q_dir=$(dirname $0)/../q
 log_dir=${q_dir}/logs
-
 
 while [ "$1" != "" ]; do
     case $1 in
         -p | --app )
                 shift
                 app=$1
-                ;;
-        -l | --log-dir )
-                shift
-                log_dir=$1
                 ;;
     esac
     shift
@@ -24,13 +18,11 @@ if [[ "$app" == "" ]]; then
     exit 1
 fi
 
-
 tplog_dir=/mnt/efs/tplog
 mkdir -p $tplog_dir
 
 log_file=${log_dir}/${app}.$(hostname).$(date +%Y%m%dD%H%M%S)
 mkdir -p $log_dir
-
 
 cd $q_dir
 
@@ -38,22 +30,22 @@ case "$app" in
     tick )
         q tick.q sym $tplog_dir -p 5010 -c 30 200 -e 1
         ;;
-    r )
-        q tick/r.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 -e 1
-        ;;
-    w )
-        q tick/w.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 -e 1
-        ;;
     tick-asg )
         q tick-asg.q sym $tplog_dir -p 5010 -c 30 200 -e 1
         ;;
+    r )
+        q tick/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
+        ;;
     r-asg )
-        q asg/r-asg.q 10.0.0.10:5010 10.0.0.11:5011 -c 30 200 -e 1
+        q asg/r-asg.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
+        ;;
+    w )
+        q tick/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
         ;;
     w-asg )
-        q asg/w-asg.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 -e 1
+        q asg/w-asg.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
         ;;
     gw-asg )
-        q asg/gw.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 -e 1
+        q asg/gw.q $TPHOST:5010 $GWHOST:5012 -p 5012 -c 30 200 -e 1
         ;;
 esac

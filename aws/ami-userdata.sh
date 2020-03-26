@@ -21,6 +21,10 @@ source ${USERHOME}/.bash_profile
 sudo -i -u ec2-user conda install kdb -c kx -y
 sudo -i -u ec2-user git clone https://github.com/jackstapleton/rdb-autoscaling.git /opt/rdb-autoscaling
 
+# set up dev env
+sudo -i -u ec2-user git clone https://github.com/jackstapleton/environments-setup.git ${USERHOME}/environments-setup
+sudo -i -u ec2-user ${USERHOME}/environments-setup/dot-files/util/vim-install.sh
+
 # configure aws cli
 mkdir -p ${USERHOME}/.aws
 AZ=$(ec2-metadata -z | cut -d ' ' -f 2)
