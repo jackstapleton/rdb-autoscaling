@@ -1,0 +1,59 @@
+#!/bin/bash
+
+
+q_dir=$(dirname $0)/../q
+log_dir=${q_dir}/logs
+
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -p | --app )
+                shift
+                app=$1
+                ;;
+        -l | --log-dir )
+                shift
+                log_dir=$1
+                ;;
+    esac
+    shift
+done
+
+if [[ "$app" == "" ]]; then
+    echo "Error: -a, --app argument is needed"
+    exit 1
+fi
+
+
+tplog_dir=/mnt/efs/tplog
+mkdir -p $tplog_dir
+
+log_file=${log_dir}/${app}.$(hostname).$(date +%Y%m%dD%H%M%S)
+mkdir -p $log_dir
+
+
+cd $q_dir
+
+case "$app" in
+    tick )
+        nohup q tick.q sym $tplog_dir -p 5010 -c 30 200 > $log_file 2&1 &
+        ;;
+    r )
+        nohup q tick/r.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 > $log_file 2&1 &
+        ;;
+    w )
+        nohup q tick/w.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 > $log_file 2&1 &
+        ;;
+    tick-asg )
+        nohup q tick-asg.q sym $tplog_dir -p 5010 -c 30 200 > $log_file 2&1 &
+        ;;
+    r-asg )
+        nohup q asg/r-asg.q 10.0.0.10:5010 10.0.0.11:5011 -c 30 200 > $log_file 2&1 &
+        ;;
+    w-asg )
+        nohup q asg/w-asg.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 > $log_file 2&1 &
+        ;;
+    gw-asg )
+        nohup q asg/gw.q 10.0.0.10:5010 10.0.0.11:5012 -c 30 200 > $log_file 2&1 &
+        ;;
+esac

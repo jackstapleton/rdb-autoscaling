@@ -1,0 +1,182 @@
+Parameters:
+  AMI:
+    Type: AWS::EC2::Image::Id
+    Default: 'ami-0da067aed0f9f0246'
+  IAMINSTANCEPROFILE:
+    Type: String
+    Default: arn:aws:iam::319631679975:instance-profile/IAM-role.dev-kdb
+    Description: "IAM instance profile to start ec2 instances under"
+  SSHKEY:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: 'aws-surface'
+  SUBNETID:
+    Type: AWS::EC2::Subnet::Id
+    Default: 'subnet-0fa8ffdae6edb4f14'
+  SECURITYGROUPIDS:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+Mappings:
+  Constants:
+    UserData:
+      Bootstrap: |
+        #!/bin/bash -x
+        bash /opt/rdb-autoscaling/aws/ec2-userdata.sh
+
+Resources:
+
+  TickASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref TickLaunchTemplate
+        Version: 1
+      MaxSize: 1
+      MinSize: 0
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: tick-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !Ref EfsFileSystem
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  TickLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+            - DeviceName: /dev/xvda
+              Ebs:
+                VolumeSize: 50
+        IamInstanceProfile:
+          Arn: !Ref IAMINSTANCEPROFILE
+        ImageId: !Ref AMI
+        InstanceType: t3.large
+        KeyName: !Ref SSHKEY
+        SecurityGroupIds: !Ref SECURITYGROUPIDS
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+            - Key: Name
+              Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}.tick-asg'
+        UserData:
+          Fn::Base64:
+            !FindInMap [ Constants, UserData, Bootstrap ]
+      LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-tick-asg-launch-template'
+
+  GatewayASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref GatewayLaunchTemplate
+        Version: 1
+      MaxSize: 10
+      MinSize: 0
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: gw-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !Ref EfsFileSystem
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  GatewayLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+            - DeviceName: /dev/xvda
+              Ebs:
+                VolumeSize: 50
+        IamInstanceProfile:
+          Arn: !Ref IAMINSTANCEPROFILE
+        ImageId: !Ref AMI
+        InstanceType: t3.large
+        KeyName: !Ref SSHKEY
+        SecurityGroupIds: !Ref SECURITYGROUPIDS
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+            - Key: Name
+              Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}.gw-asg'
+        UserData:
+          Fn::Base64:
+            !FindInMap [ Constants, UserData, Bootstrap ]
+      LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-gw-asg-launch-template'
+
+  RdbASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ GatewayASG ]
+    Properties:
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref RdbLaunchTemplate
+        Version: 1
+      MaxSize: 5
+      MinSize: 0
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !Ref EfsFileSystem
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  RdbLaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+            - DeviceName: /dev/xvda
+              Ebs:
+                VolumeSize: 50
+        IamInstanceProfile:
+          Arn: !Ref IAMINSTANCEPROFILE
+        ImageId: !Ref AMI
+        InstanceType: t3.large
+        KeyName: !Ref SSHKEY
+        SecurityGroupIds: !Ref SECURITYGROUPIDS
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+            - Key: Name
+              Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}.r-asg'
+        UserData:
+          Fn::Base64:
+            !FindInMap [ Constants, UserData, Bootstrap ]
+      LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-r-asg-launch-template'
+
+  EfsFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: False
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub '${AWS::Region}-${AWS::StackName}-efs'
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+
+  EfsMountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SecurityGroups: !Ref SECURITYGROUPIDS
+      SubnetId: !Ref SUBNETID
