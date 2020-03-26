@@ -26,10 +26,10 @@ sub:{subInner[x;y;.z.w]}
     -1 "New process subscribing: on handle ",string .z.w;
 
     if[not (=) . count each (t;s);
-            '"Count of table and symbol lists must match"];
+            '"Count of table and symbol lists must match" ];
 
     if[not all missing: t in .u.t;
-            '.Q.s1[t where not missing]," not available"];
+            '.Q.s1[t where not missing]," not available" ];
 
     / add new process to subscriber table
     `.u.asg.tab upsert (.z.p; .z.w; 0b; 0b; t; s; p; 0N);
@@ -70,7 +70,7 @@ sub:{subInner[x;y;.z.w]}
     queue: select from .u.asg.tab where not live, not rolled, shard = cfg`shard;
 
     if[not count queue;
-            :-1 "No process in the subscriber queue"];
+        :-1 "No process in the subscriber queue" ];
 
     / start publishing to the first process in the queue
     .u.asg.sub . first[queue]`handle`tabs`syms;
@@ -80,11 +80,9 @@ sub:{subInner[x;y;.z.w]}
 
 .u.asg.end:{[]
     -1  "Clearing data from rolled ASG subscribers";
-
     rolled: exec handle from .u.asg.tab where not null handle,
                                               rolled,
                                               not live;
-
     rolled @\: (`.u.end; .u.d);
     delete from `.u.asg.tab where rolled;
 
@@ -94,8 +92,7 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.zpc:{[h]
     / roll subscriber with 0 completed upd msgs if connection to the live subscriber is lost
     if[0b^ first exec live from .u.asg.tab where handle = h;
-            .u.asg.rollSubscriber[h;0];
-            ];
+            .u.asg.rollSubscriber[h;0] ];
 
     update handle:0Ni from `.u.asg.tab where handle = h;
  };
@@ -103,6 +100,5 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.showInfo:{[]
     if[n:count .u.asg.tab;
             -1  string[n]," subscribers connected from Autoscaling Groups";
-            show .u.asg.tab;
-            ];
+            show .u.asg.tab ];
  };

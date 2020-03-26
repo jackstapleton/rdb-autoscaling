@@ -31,7 +31,6 @@
     res
  };
 
-
 / aws autoscaling cli commands
 .util.aws.describeASG:{[groupName]
     res: .util.sys.runWithRetry "aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name ",groupName;

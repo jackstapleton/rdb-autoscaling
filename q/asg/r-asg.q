@@ -6,7 +6,10 @@ system "l asg/sub.q"
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];
 
 / open connection to tickerplant and gateway
-.sub.TP: @[{hopen `$":", .u.x: x 0}; .z.x; 0Ni];
+while[null .sub.TP: @[{hopen `$":", .u.x: x 0}; .z.x; 0Ni];
+        -1 string[.z.p]," retrying tickerplant - ",.u.x;
+        system "sleep 1" ];
+
 .sub.GW: @[{hopen `$":", .u.gw: x 1}; .z.x; 0Ni];
 
 / set globals which coordinate scaling
@@ -36,4 +39,5 @@ system"t 5000"
 neg[.sub.TP] @ (`.u.asg.addSubscriber; `Trade`Quote; (`;`GM`MSFT`APPL`JPM); `$ .aws.groupName, ".r-asg");
 
 / register with gateway so process can be queried
-neg[.sub.GW] @ (`.gw.register;.z.h);
+if[not null .sub.GW;
+        neg[.sub.GW] @ (`.gw.register;.z.h) ];

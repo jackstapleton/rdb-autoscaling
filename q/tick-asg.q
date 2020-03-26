@@ -15,6 +15,6 @@ system "l asg/u-asg.q"
 .tick.end: .u.end;
 .u.end: {.tick.end x; .u.asg.end x;};
 
-.tick.ts:.z.ts;
+.tick.ts: .z.ts;
 .util.hbTime: .z.p;
 .z.ts:{.util.hb[]; .tick.ts[];}
