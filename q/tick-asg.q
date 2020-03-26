@@ -3,14 +3,14 @@
 / launch kdb-tick
 system "l tick.q"
 
-/ rewrite .u.sub & .u.add to take .z.w as a parameter
 / load  .u.asg code
+/ rewrites .u.sub & .u.add to take .z.w as a parameter
 system "l asg/u-asg.q"
 
 / rewrite .z.pc to run tick and asg .z.pc
 .tick.zpc: .z.pc;
-.z.pc: {.u.asg.zpc x; .tick.zpc x};
+.z.pc: {.tick.zpc x; .u.asg.zpc x;};
 
 / rewrite .u.end to run tick and asg .z.pc
 .tick.end: .u.end;
-.u.end: {.tick.end x; .u.asg.end x};
+.u.end: {.tick.end x; .u.asg.end x;};

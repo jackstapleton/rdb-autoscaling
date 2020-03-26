@@ -22,7 +22,6 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.tab: flip `time`handle`live`rolled`tabs`syms`shard`lastI!();
 `.u.asg.tab upsert (0Np;0Ni;0b;0b;();();`;0N);
 
-
 .u.asg.addSubscriber:{[t;s;p]
     -1 "New process subscribing: on handle ",string .z.w;
 
@@ -36,14 +35,12 @@ sub:{subInner[x;y;.z.w]}
     `.u.asg.tab upsert (.z.p; .z.w; 0b; 0b; t; s; p; 0N);
 
     / check if there is a live subscriber
+    / start publishing to the handle if there is not
     if[not count select from .u.asg.tab where live, shard = p;
-            / start publishing to the  handle if there is not
-            .u.asg.sub[.z.w;t;s];
-            ];
+            .u.asg.sub[.z.w;t;s] ];
 
     .u.asg.showInfo[];
  };
-
 
 .u.asg.sub:{[h;t;s]
     / mark this handle as the live subscriber
@@ -55,14 +52,12 @@ sub:{subInner[x;y;.z.w]}
     / find the last message sent to a subscriber
     startI: max 0^ exec lastI from .u.asg.tab;
 
-    / tell the new subscriber to relay tickerplant log from that message
+    / tell the new subscriber to replay tickerplant log from that message
     neg[h] (`.sub.rep; schemas; .u.d; .u.L; (startI;.u.i));
  };
 
-
 .u.asg.rollSubscriber:{[h;subI]
     -1 "Subscriber on handle as ",(string h)," has stopped subscribing";
-
     cfg: exec from .u.asg.tab where handle = h;
 
     / mark process as rolled
@@ -83,7 +78,6 @@ sub:{subInner[x;y;.z.w]}
     .u.asg.showInfo[];
  };
 
-
 .u.asg.end:{[]
     -1  "Clearing data from rolled ASG subscribers";
 
@@ -97,7 +91,6 @@ sub:{subInner[x;y;.z.w]}
     .u.asg.showInfo[];
  };
 
-
 .u.asg.zpc:{[h]
     / roll subscriber with 0 completed upd msgs if connection to the live subscriber is lost
     if[0b^ first exec live from .u.asg.tab where handle = h;
@@ -106,7 +99,6 @@ sub:{subInner[x;y;.z.w]}
 
     update handle:0Ni from `.u.asg.tab where handle = h;
  };
-
 
 .u.asg.showInfo:{[]
     if[n:count .u.asg.tab;

@@ -10,9 +10,11 @@ ec2_get_instance_tag () {
 }
 
 ec2_mount_efs () {
-    efs_id=$1
+    efs_ip=$1
     efs_dir=$2
-    echo -e "\nMounting the $efs_id EFS filesystem at $efs_dir\n"
+    echo -e "\nMounting the $efs_ip EFS filesystem at $efs_dir\n"
     mkdir -p -m a=rwx $efs_dir
-    mount -t efs $efs_id:/ $efs_id
+    mount -t nfs $efs_ip:/ $efs_dir
+    chmod 777 $efs_dir
+    df -h
 }

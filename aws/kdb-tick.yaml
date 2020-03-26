@@ -1,7 +1,7 @@
 Parameters:
   AMI:
     Type: AWS::EC2::Image::Id
-    Default: 'ami-0da067aed0f9f0246'
+    Default: 'ami-0a6d62d129b1be87d'
   IAMINSTANCEPROFILE:
     Type: String
     Default: arn:aws:iam::319631679975:instance-profile/IAM-role.dev-kdb
@@ -28,7 +28,7 @@ Resources:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -42,7 +42,7 @@ Resources:
           Value: tick-asg
         - Key: EFS
           PropagateAtLaunch: True
-          Value: !Ref EfsFileSystem
+          Value: !GetAtt EfsMountTarget.IpAddress
       VPCZoneIdentifier:
         - !Ref SUBNETID
 
@@ -75,7 +75,7 @@ Resources:
     DependsOn: [ TickASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -89,7 +89,7 @@ Resources:
           Value: gw-asg
         - Key: EFS
           PropagateAtLaunch: True
-          Value: !Ref EfsFileSystem
+          Value: !GetAtt EfsMountTarget.IpAddress
       VPCZoneIdentifier:
         - !Ref SUBNETID
 
@@ -122,7 +122,7 @@ Resources:
     DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -136,7 +136,7 @@ Resources:
           Value: r-asg
         - Key: EFS
           PropagateAtLaunch: True
-          Value: !Ref EfsFileSystem
+          Value: !GetAtt EfsMountTarget.IpAddress
       VPCZoneIdentifier:
         - !Ref SUBNETID
 

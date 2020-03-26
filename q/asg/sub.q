@@ -3,7 +3,6 @@
 / load code to scale and terminate instances from autoscaling group
 system "l asg/util.q"
 
-
 / called by the tickerplant when it begins publishing to the process
 .sub.rep:{[schemas;date;tplog;logWindow]
     -1 "Tickerplant called .sub.rep, process is now the live subscriber";
@@ -40,7 +39,8 @@ system "l asg/util.q"
 / tickerplant will use it to tell the next rdb where to start from
 .sub.upd: {.sub.i+: 1; x upsert y };
 
-
+/ monitor server memory to first check if a new server needs to be launched
+/ and second check if the process needs to cut its subscription
 .sub.monitorMemory:{[]
     / check if it is time to launch another rdb server
     if[not .sub.scaled;
@@ -66,6 +66,7 @@ system "l asg/util.q"
     mem
  };
 
+/ send tickerplant last upd message recieeved and cut subscription
 .sub.cutSubscription:{[]
     -1 "Cutting subscription";
     .sub.TP ({.u.asg.rollSubscriber[.z.w;x]}; .sub.i);
@@ -77,14 +78,13 @@ system "l asg/util.q"
 / upd to run after subscription has been cut
 .sub.disconnectUpd: {[t;x] (::)};
 
-
+/ clear data from all tables from before a certain time
+/ terminate the the server if no data is left and the process has cut its subscription
 .sub.clear:{[tm]
     -1 "Clearing data from before ",string[tm]," from ",.Q.s1 tables[];
 
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
 
-    / terminate the instance if the process has cut its subscription
-    / and there is no data left in any tables
     if[.sub.rolled;
         -1 "Table counts after clearing:";
         show tabCounts: tables[]!count each get each tables[];
