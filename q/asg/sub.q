@@ -13,12 +13,10 @@ system "l asg/util.q"
     .sub.d: date;
     .sub.start: logWindow 0;
 
-    if[.sub.doReplay;
-        -1 "Replaying ", string tplog;
-        -1 "Between ", .Q.s1 logWindow;
-        `upd set .sub.replayUpd;
-        -11!(logWindow 1;tplog);
-        ];
+    -1 "Replaying ", string tplog;
+    -1 "Between ", .Q.s1 logWindow;
+    `upd set .sub.replayUpd;
+    -11!(logWindow 1;tplog);
 
     `upd set .sub.upd;
  };

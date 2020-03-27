@@ -60,7 +60,7 @@ Resources:
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI
-        InstanceType: t3.large
+        InstanceType: t2.small
         KeyName: !Ref SSHKEY
         SecurityGroupIds: !Ref SECURITYGROUPIDS
         TagSpecifications:
@@ -107,7 +107,7 @@ Resources:
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI
-        InstanceType: t3.large
+        InstanceType: t2.small
         KeyName: !Ref SSHKEY
         SecurityGroupIds: !Ref SECURITYGROUPIDS
         TagSpecifications:
@@ -154,7 +154,7 @@ Resources:
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI
-        InstanceType: t3.large
+        InstanceType: t2.small
         KeyName: !Ref SSHKEY
         SecurityGroupIds: !Ref SECURITYGROUPIDS
         TagSpecifications:

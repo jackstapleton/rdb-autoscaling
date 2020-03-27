@@ -14,9 +14,13 @@ echo -e "source /opt/rdb-autoscaling/aws/ec2-utils.sh\n" >> ${USERHOME}/.bash_pr
 export INSTANCEID=$(ec2-metadata -i | cut -d ' ' -f 2)
 export APP=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID APP)
 export EFS=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID EFS)
-export STACK=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID )
+export STACK=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID aws:cloudformation:stack-name)
 
-export TPHOST=$(sudo -i -u ec2-user ec2_get_ip_by_stack_app $STACK tick-asg)
+while [[ "$TPHOST" == "" ]]; do
+    echo "Looking for tick-asg private ip address"
+    export TPHOST=$(sudo -i -u ec2-user ec2_get_ip_by_stack_app $STACK tick-asg)
+done
+
 export GWHOST=$(sudo -i -u ec2-user ec2_get_ip_by_stack_app $STACK gw-asg)
 
 # send to bash profile
