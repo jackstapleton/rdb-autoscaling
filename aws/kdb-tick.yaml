@@ -1,7 +1,7 @@
 Parameters:
   AMI:
     Type: AWS::EC2::Image::Id
-    Default: 'ami-0cc54d00e26d5326d'
+    Default: 'ami-04b426bf587c20d5b'
   IAMINSTANCEPROFILE:
     Type: String
     Default: arn:aws:iam::319631679975:instance-profile/IAM-role.dev-kdb
@@ -27,11 +27,28 @@ Mappings:
 
 Resources:
 
+  EfsFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: False
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub '${AWS::Region}-${AWS::StackName}-efs'
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+
+  EfsMountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SecurityGroups: !Ref SECURITYGROUPIDS
+      SubnetId: !Ref SUBNETID
+
   TickASG:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       Cooldown: 300
-      DesiredCapacity: 0
+      DesiredCapacity: 1
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -125,7 +142,7 @@ Resources:
     DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 0
+      DesiredCapacity: 1
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -166,20 +183,3 @@ Resources:
           Fn::Base64:
             !FindInMap [ Constants, UserData, Bootstrap ]
       LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-r-asg-launch-template'
-
-  EfsFileSystem:
-    Type: AWS::EFS::FileSystem
-    Properties:
-      Encrypted: False
-      FileSystemTags:
-        - Key: Name
-          Value: !Sub '${AWS::Region}-${AWS::StackName}-efs'
-      PerformanceMode: generalPurpose
-      ThroughputMode: bursting
-
-  EfsMountTarget:
-    Type: AWS::EFS::MountTarget
-    Properties:
-      FileSystemId: !Ref EfsFileSystem
-      SecurityGroups: !Ref SECURITYGROUPIDS
-      SubnetId: !Ref SUBNETID

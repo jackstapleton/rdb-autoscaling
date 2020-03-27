@@ -40,9 +40,9 @@ if[not null .sub.GW;
 / tickerplant saves subscriptions
 / so all tab and sym subscriptions must be sent at once
 / .u.asg.addSubscriber[tabList;symLists;shardName]
-/ e.g. .u.asg.addSubscriber[`;`;`shard1]
-/ e.g. .u.asg.addSubscriber[`Trade;`;`shard2]
-/ e.g. .u.asg.addSubscriber[`Quote;enlist `aa`bb`cc;`shard3]
-/ e.g. .u.asg.addSubscriber[`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4]
+/ e.g. neg[.sub.TP] (`.u.asg.addSubscriber;`;`;`shard1)
+/ e.g. neg[.sub.TP] (`.u.asg.addSubscriber;`Trade;`;`shard2)
+/ e.g. neg[.sub.TP] (`.u.asg.addSubscriber;`Quote;enlist `aa`bb`cc;`shard3)
+/ e.g. neg[.sub.TP] (`.u.asg.addSubscriber;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
 
 neg[.sub.TP] @ (`.u.asg.addSubscriber; `; `; `$ .aws.groupName, ".r-asg");

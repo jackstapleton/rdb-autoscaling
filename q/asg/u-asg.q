@@ -28,7 +28,7 @@ sub:{subInner[x;y;.z.w]}
     if[not (=) . count each (t;s);
             '"Count of table and symbol lists must match" ];
 
-    if[not all missing: t in .u.t;
+    if[not all missing: t in .u.t,`;
             '.Q.s1[t where not missing]," not available" ];
 
     / add new process to subscriber table
@@ -47,7 +47,9 @@ sub:{subInner[x;y;.z.w]}
     update live:1b from `.u.asg.tab where handle = h;
 
     / add subscriber to .u.w
-    schemas: .u.subInner[;;h] .' flip (t;s);
+    schemas: $[-11h = type t;
+                    enlist .u.subInner[t;s;h];
+                    .u.subInner[;;h] .' flip (t;s)];
 
     / find the last message sent to a subscriber
     startI: max 0^ exec lastI from .u.asg.tab;
@@ -80,9 +82,7 @@ sub:{subInner[x;y;.z.w]}
 
 .u.asg.end:{[]
     -1  "Clearing data from rolled ASG subscribers";
-    rolled: exec handle from .u.asg.tab where not null handle,
-                                              rolled,
-                                              not live;
+    rolled: exec handle from .u.asg.tab where not null handle, rolled, not live;
     rolled @\: (`.u.end; .u.d);
     delete from `.u.asg.tab where rolled;
 
