@@ -19,3 +19,8 @@ system"l asg/util.q"
 .tick.ts: .z.ts;
 .util.hbTime: .z.p;
 .z.ts:{.util.hb[]; .tick.ts[];}
+
+/run
+>q tick-asg.q sym  . -p 5010            /tick-asg
+>q asg/r-asg.q $TICKHOST:5010 -p 5011   /rdb-asg
+>q asg/feed.q  /feed

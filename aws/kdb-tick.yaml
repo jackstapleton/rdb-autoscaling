@@ -73,7 +73,7 @@ Resources:
         BlockDeviceMappings:
             - DeviceName: /dev/xvda
               Ebs:
-                VolumeSize: 50
+                VolumeSize: 8
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI
@@ -120,7 +120,7 @@ Resources:
         BlockDeviceMappings:
             - DeviceName: /dev/xvda
               Ebs:
-                VolumeSize: 50
+                VolumeSize: 8
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI
@@ -167,7 +167,7 @@ Resources:
         BlockDeviceMappings:
             - DeviceName: /dev/xvda
               Ebs:
-                VolumeSize: 50
+                VolumeSize: 8
         IamInstanceProfile:
           Arn: !Ref IAMINSTANCEPROFILE
         ImageId: !Ref AMI

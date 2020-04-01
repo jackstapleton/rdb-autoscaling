@@ -8,11 +8,11 @@
 / aws cli commands should be wrapped in a retry loop as they may timeout when aws is under load
 .util.sys.runWithRetry:{[cmd]
     n: 0;
-    while[not last res:.util.sys.run cmd; if[10 < n+: 1; 'res 0] ];
+    while[not last res:.util.sys.runSafe cmd; if[10 < n+: 1; 'res 0] ];
     res 0
  };
 
-.util.sys.run: @[{(system x;1b)};;{(x;0b)}];
+.util.sys.runSafe: @[{(system x;1b)};;{(x;0b)}];
 
 / aws ec2 cli commands
 .util.aws.getInstanceId: {last " " vs first system "ec2-metadata -i"};
@@ -50,7 +50,8 @@
 .util.aws.scale:{[groupName]
     needed: 1 + .util.aws.getDesiredCapacity groupName;
     .util.aws.setDesiredCapacity[groupName;needed];
-    while[not needed = .util.aws.getDesiredCapacity groupName; .util.aws.setDesiredCapacity[groupName;needed] ];
+    while[not needed = .util.aws.getDesiredCapacity groupName;
+            .util.aws.setDesiredCapacity[groupName;needed] ];
  };
 
 .util.aws.terminate:{[instanceId]

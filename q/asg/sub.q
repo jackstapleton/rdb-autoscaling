@@ -4,13 +4,12 @@
 system "l asg/util.q"
 
 / called by the tickerplant when it begins publishing to the process
-.sub.rep:{[schemas;date;tplog;logWindow]
+.sub.rep:{[schemas;tplog;logWindow]
     -1 "Tickerplant called .sub.rep, process is now the live subscriber";
 
     (.[;();:;].) each schemas;
 
     .sub.live: 1b;
-    .sub.d: date;
     .sub.start: logWindow 0;
 
     -1 "Replaying ", string tplog;
@@ -52,8 +51,7 @@ system "l asg/util.q"
     / check if server is full and process needs to stop subscribing
     if[not .sub.rolled;
         if[.sub.getMemUsage[] > .sub.rollThreshold;
-                .sub.cutSubscription[];
-                .sub.rolled: 1b;
+                .sub.unsub[];
                 ];
         ];
  };
@@ -65,9 +63,9 @@ system "l asg/util.q"
  };
 
 / send tickerplant last upd message recieeved and cut subscription
-.sub.cutSubscription:{[]
+.sub.unsub:{[]
     -1 "Cutting subscription";
-    .sub.TP ({.u.asg.rollSubscriber[.z.w;x]}; .sub.i);
+    .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
     .sub.live: 0b;
     .sub.rolled: 1b;
     `upd set .sub.disconnectUpd;
