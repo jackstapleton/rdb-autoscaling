@@ -63,7 +63,6 @@ The Tickerplant will keep track of the cluster's RDBs in `.u.asg.tab`.
 ```
 
 To be added to this table, a subscriber must call `.u.asg.sub`.
-It takes 3 arguments:
 
 ```q
 / t - A list of tables (or \` for all).
@@ -93,7 +92,6 @@ To do this `.u.asg.add` is called.
 ```q
 .u.asg.add:{[t;s;h]
     update live:1b from `.u.asg.tab where handle = h;
-
     / add subscriber to .u.w
     schemas: $[-11h = type t;
                     enlist .u.subInner[t;s;h];
@@ -133,10 +131,11 @@ When an RDB has filled up with data it will unsubscribe and call `.u.asg.roll` o
 ```q
 .u.asg.roll:{[h;subI]
     cfg: exec from .u.asg.tab where handle = h;
+    / update .u.asg.tab
     update live:0b, rolled:1b, lastI:subI from `.u.asg.tab where handle = h;
-
+    / remove handle h from .u.w
     .u.del[;h] each cfg`tabs;
-
+    / add the next rdb in the que if there is one
     if[count queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle ];
  };
@@ -173,7 +172,7 @@ aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name rdb-autos
 
 aws autoscaling set-desired-capacity --auto-scaling-group-name rdb-autoscaling-group --desired-capacity 2
 
-aws autoscaling terminate-instance-in-auto-scaling-group --instance-id i- --should-decrement-desired-capacity
+aws autoscaling terminate-instance-in-auto-scaling-group --instance-id i-1234567890abcdef --should-decrement-desired-capacity
 ```
 
 As these are unix commands we can run them in kdb+ using `system`, and we can use `.j.k` to parse the results as they will be in `json`.
@@ -293,14 +292,13 @@ After the log has been replayed `upd` is set to `.sub.upd`.
 This function will continue to increment `.sub.i` for every `upd` the RDB receives.
 
 ```q
-.sub.upd: {.sub.i+: 1; x upsert y };
+.sub.upd: {.sub.i+: 1; x upsert y};
 ```
 
 Once the process is live, `.z.ts` will be set to `.sub.monitorMemory`.
 
 ```q
 .sub.monitorMemory:{[]
-
     if[not .sub.scaled;
         if[.util.getMemUsage[] > .sub.scaleThreshold;
                 -1 "Scaling ", .aws.groupName;
@@ -309,7 +307,6 @@ Once the process is live, `.z.ts` will be set to `.sub.monitorMemory`.
                 ];
         :(::);
         ];
-
     if[not .sub.rolled;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .sub.unsub[];
@@ -354,7 +351,6 @@ It will then call `.sub.clear`.
 
 .sub.clear:{[tm]
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
-
     if[.sub.rolled;
         if[not max count each get each tables[];
                 .util.aws.terminate .aws.instanceId;
