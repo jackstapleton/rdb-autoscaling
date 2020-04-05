@@ -3,8 +3,6 @@
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' .util.sys.runWithRetry "free") except\: enlist ""};
 .util.getMemUsage:{100 * 1 - (%) . .util.free[][`Mem;`free`total]};
 
-.util.hb:{if[.util.hbTime < .z.p - 00:01; -1 string[.util.hbTime:.z.p]," : heartbeat"]};
-
 / aws cli commands should be wrapped in a retry loop as they may timeout when aws is under load
 .util.sys.runWithRetry:{[cmd]
     n: 0;

@@ -6,7 +6,12 @@
 
 ### Auto Scaling the RDBs
 
-There a few ways we could scale the number of instances in our RDB Auto Scaling Group.
+There a two ways we could scale the number of instances in our RDB Auto Scaling Group.
+
+1. Cloudwatch Metrics
+2. Manual Scaling
+
+#### Cloudwatch Metrics
 
 We could allow the Auto Scaling group to do the scaling based on a Cloudwatch Metric, say memory usage or row counts.
 
@@ -20,7 +25,9 @@ However, if after all the criteria have been evaluated there are still multiple 
 Under no circumstance do we want AWS to terminate an instance of an RDB process which is still holding today's data.
 So we will need to keep control of the Auto Scaling group's `Desired Capacity` within the application.
 
-This can be done using the python's `boto3` library, or we can use the AWS command line interface (cli).
+#### Manual Scaling
+
+To manually scale our cluster we will use the AWS command line interface (cli).
 Specifically the `aws autoscaling` cli.
 
 ```bash
@@ -36,7 +43,7 @@ The results of these functions will be returned as `json` so we will be able to 
 
 ### Auto Scaling in Q
 
-`asg/util.q` holds a number of api functions to interact with the `aws autoscaling` cli.
+The `asg/util.q` file holds a number of API functions to interact with the `aws autoscaling` cli.
 
 We will use the cli for two purposes:
 
@@ -108,7 +115,7 @@ So the RDBs will be the ones to manage the Auto Scaling in our application.
 - At the end of the day the day's data will be flushed, and the cluster will scale in.
 
 The code to coordinate the RDBs queue is in the `.u.asg` namespace.
-It's functions act as a wrapper around kdb-tick's `.u` functionality.
+Its functions act as a wrapper around kdb-tick's `.u` functionality.
 I.e., the functions will determine when to call `.u.sub` and `.u.del` in order to add and remove the subscriber from `.u.w`.
 
 ### Scaling the Cluster
@@ -123,7 +130,7 @@ On a high level the scaling method is quite simple.
 ### The Subscriber Queue
 
 There is one issue with the solution outlined above.
-An RDB will not come up at the exact moment it's predecessor unsubscribes.
+An RDB will not come up at the exact moment its predecessor unsubscribes.
 So there are two scenarios that the Tickerplant must account for.
 
 1. The new RDB comes up too early.
@@ -169,13 +176,12 @@ This means the RDBs in the cluster cannot make multiple `.u.asg.sub` calls.
 ```q
 / t - A list of tables (or \` for all).
 / s - Lists of symbol lists to subscribe to for the tables.
-/ p - The name of the queue to be added to.
+/ q - The name of the queue to be added to.
 
 .u.asg.sub:{[t;s;q]
     if[-11h = type t;
         t: enlist t;
-        s: enlist s;
-        ];
+        s: enlist s];
 
     if[not (=) . count each (t;s);
             '"Count of table and symbol lists must match" ];
@@ -186,7 +192,7 @@ This means the RDBs in the cluster cannot make multiple `.u.asg.sub` calls.
     `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0b; 0b; 0N);
 
     if[not count select from .u.asg.tab where live, queue = q;
-            .u.asg.add[.z.w;t;s] ];
+            .u.asg.add[.z.w;t;s]];
  };
 ```
 
@@ -219,8 +225,7 @@ There are two instances when this is called:
 .u.asg.add:{[t;s;h]
     update live:1b from `.u.asg.tab where handle = h;
     schemas: .u.subInner[;;h] .' flip (t;s);
-    startI: max 0^ exec lastI from .u.asg.tab;
-    neg[h] (`.sub.rep; schemas; .u.L; (startI;.u.i));
+    neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
  };
 ```
 
@@ -241,22 +246,17 @@ When the Tickerplant makes an RDB the *live* subscriber it will call `.sub.rep` 
 
 .sub.rep:{[schemas;tplog;logWindow]
     (.[;();:;].) each schemas;
-    .sub.live: 1b;
-
     .sub.start: logWindow 0;
     `upd set .sub.replayUpd;
-
     -11!(logWindow 1;tplog);
-
     `upd set .sub.upd;
-
     .z.ts: .sub.monitorMemory;
     system "t 5000";
+    .sub.live: 1b;
  };
 ```
 
-Like in `tick/r.q` the RDBs will set the schemas of the tables it has just subscribed for.
-It will then set `.sub.live` to be true and move on to replaying the Tickerplant's log.
+Like in `tick/r.q` the RDBs will set the the tables' schemas and replay the Tickerplant's log.
 
 #### Replaying the Tickerplant Log
 
@@ -302,7 +302,7 @@ This function will continue to increment `.sub.i` for every `upd` the RDB receiv
 
 ### Monitoring RDB Server Memory
 
-The RDB monitors the memory of it's server for two reasons:
+The RDB monitors the memory of its server for two reasons:
 
 1. Tell the Auto Scaling group to scale.
 2. Stop subscribing from the Tickerplant.
@@ -355,7 +355,6 @@ From tahat point The RDB will no longer receive data from the Tickerplant, but i
     .sub.live: 0b;
     .sub.rolled: 1b;
     `upd set .sub.disconnectUpd;
-
     .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
  };
 
@@ -368,11 +367,8 @@ It will also call `.u.asg.roll` on the Tickerplant, using its own handle and `.s
 ```q
 .u.asg.roll:{[h;subI]
     cfg: exec from .u.asg.tab where handle = h;
-    / update .u.asg.tab
     update live:0b, rolled:1b, lastI:subI from `.u.asg.tab where handle = h;
-    / remove handle h from .u.w
     .u.del[;h] each cfg`tabs;
-    / add the next rdb in the que if there is one
     if[count queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle ];
  };
@@ -395,7 +391,18 @@ In the majority of systems, when end of day is called the data will be written t
 In our case when we do this the *rolled* RDB's will be sitting idle with no data.
 So we will also want the cluster to scale in by terminating these servers.
 
-To do this `.u.end` will be set to `.sub.clear`.
+When end of data occurs the Tickerplant will call `.u.end`.
+`.u.end` will call `.u.asg.end` to call `.u.end` on all rolled subscribers and deletes their records from `.u.asg.tab`.
+
+```q
+.u.asg.end:{[]
+    rolled: exec handle from .u.asg.tab where not null handle, rolled, not live;
+    rolled @\: (`.u.end; .u.d);
+    delete from `.u.asg.tab where rolled;
+ };
+```
+
+`.u.end` on the RDBs will call `.sub.clear` to flush all T+1 data and terminate the rolled servers if they have no data left.
 
 ```q
 .u.end: {[dt] .sub.clear dt+1};
@@ -411,42 +418,47 @@ To do this `.u.end` will be set to `.sub.clear`.
 ```
 
 - All of the previous day's data will be deleted each table.
-- If the RDB has been rolled and has no data left in it's tables it will call `.util.aws.terminate`.
+- If the RDB has been rolled and has no data left in its tables it will call `.util.aws.terminate`.
 - `.util.aws.terminate` will both terminate the instnace and reduce the `DesiredCapacity` by one.
 
 ### Bringing it All Together
 
-Starting the Tickerplant is the same as in kdb-tick, but `tick-asg.q` is loaded instead of `tick.q`.
+Starting the Tickerplant is the same as in kdb-tick, but `tickasg.q` is loaded instead of `tick.q`.
 
 ```bash
-    q tick-asg.q sym /mnt/efs/tplog -p 5010
+    q tickasg.q sym /mnt/efs/tplog -p 5010
 ```
 
-#### tick-asg.q
+#### tickasg.q
 
 ```q
-/ initialise kdb-tick
 system "l tick.q"
+system "l asg/u.q"
 
-/ load .u.asg code
-/ rewrites .u.sub & .u.add to take .z.w as a parameter
-system "l asg/u-asg.q"
-
-/ rewrite .z.pc to run tick and asg .z.pc
 .tick.zpc: .z.pc;
 .z.pc: {.tick.zpc x; .u.asg.zpc x;};
 
-/ rewrite .u.end to run tick and asg .z.pc
 .tick.end: .u.end;
 .u.end: {.tick.end x; .u.asg.end x;};
 ```
 
-`tick-asg.q` begins by loads both `tick.q` and `asg/u-asg.q` loading in `.u` and `.u.asg`.
+`tickasg.q` begins by loads both `tick.q` and `asg/u.q` loading in `.u` and `.u.asg`.
 `.u.tick` is ran in `tick.q` so the Tickerplant is started.
 
 `.z.pc` and `.u.end` are then overwritten to use both the `.u` and `.u.asg` versions.
 
-There are also some minor changes made to `.u.add` and `.u.sub` in `asg/u-asg.q`.
+```q
+.u.asg.zpc:{[h]
+    if[0b^ first exec live from .u.asg.tab where handle = h;
+            .u.asg.roll[h;0]];
+    update handle:0Ni from `.u.asg.tab where handle = h;
+ };
+```
+
+If the disconnecting RDB is the live subscriber the Tickerplant calls `.u.asg.roll`.
+`.u.asg.zpc` updates the handle column in `.u.asg.tab` to be null for the disconnected RDB.
+
+There are also some minor changes made to `.u.add` and `.u.sub` in `asg/u.q`.
 
 #### Changes to `.u`
 
@@ -462,7 +474,7 @@ The same change could not be made to `.u.sub` as it is the entry function for kd
 To keep `tick/r.q` working `.u.subInner` has been added, it is a copy of `.u.sub` but it does take a handle as a third parameter, and it now passes that handle into `.u.add`.
 `.u.sub` is now a projection of `.u.subInner`, it passes `.z.w` in as the third parameter.
 
-##### tick/u.q
+##### tick/u.q Versions
 ```q
 \d .u
 add:{$[(count w x)>i:w[x;;0]?.z.w;.[`.u.w;(x;i;1);union;y];w[x],:enlist(.z.w;y)];(x;$[99=type v:value x;sel[v]y;@[0#v;`sym;`g#]])}
@@ -470,7 +482,7 @@ sub:{if[x~`;:sub[;y]each t];if[not x in t;'x];del[x].z.w;add[x;y]}
 \d .
 ```
 
-##### asg/u-asg.q
+##### asg/u.q Versions
 ```q
 / use 'z' instead of .z.w
 add:{$[(count w x)>i:w[x;;0]?z;.[`.u.w;(x;i;1);union;y];w[x],:enlist(z;y)];(x;$[99=type v:value x;sel[v]y;@[0#v;`sym;`g#]])}
@@ -482,10 +494,57 @@ sub:{subInner[x;y;.z.w]}
 \d .
 ```
 
+#### asg/r.q
+
+When staring an RDB in autosacling mode `asg/r.q` is loaded instead of `tick/r.q`.
+
+```bash
+q asg/r.q 10.0.0.1:5010
+```
+
+Where `10.0.0.1` is the Private Ip address of the Tickerplant's server.
+
+```q
+/q asg/r.q [host]:port[:usr:pwd]
+
+system "l asg/util.q"
+system "l asg/sub.q"
+
+while[null .sub.TP: @[{hopen `$":", .u.x: x}; .z.x 0; 0Ni];
+        -1 string[.z.p]," retrying tickerplant - ",.u.x;
+        system "sleep 1" ];
+
+.aws.instanceId: .util.aws.getInstanceId[];
+.aws.groupName: .util.aws.getGroupName[.aws.instanceId];
+
+.sub.scaleThreshold: 60;
+.sub.rollThreshold: 80;
+
+.sub.live: 0b;
+.sub.scaled: 0b;
+.sub.rolled: 0b;
+
+.sub.i: 0;
+
+.u.end: {[dt] .sub.clear dt+1};
+
+neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
+```
+
+`asg/r.q` loads in the code to scale in `asg/util.q` and the code to subscribe and roll in `asg/sub.q`.
+Opening its handle to the Tickerplant is done in a retry loop just in case the Tickerplant takes some time to initially come up.
+
+It then sets the globals outlined below.
+
+
+
+
 ## AWS Setup
 
 #### Amazon Machine Image (AMI)
-To achieve this on AWS we will start an EC2 instance, install kdb+, and deploy our code to the server.
+
+To set this all up on AWS we will first need an Amazon Machine Image (AMI).
+For this we will start an EC2 instance, install kdb+, and deploy our code to the server.
 We will then create an Amazon Machine Image (AMI) using the amazon cli.
 
 ```bash
@@ -498,12 +557,21 @@ An AMI is a template EC2 uses to start instances.
 Creating one with our code and software means we can start multiple servers with identical software, this will ensure consistency across our Stack.
 
 #### Cloudformation
-Next we will launch a Stack using AWS Cloudformation.
-Cloudformation allows us to use a json or yaml file to provision resources.
 
-Our Stack will consist of two Auto Scaling groups, and one AWS ElasticFileSystem (EFS).
+Next we will launch a Stack using AWS Cloudformation.
+Cloudformation allows us to use a json or yaml file to provision AWS resources.
+
+Our Stack will consist of:
+
+- AWS ElasticFileSystem (EFS).
+- EFS Mount Target.
+- Tickerplant Launch Template
+- Tickerplant Auto Scaling group
+- RDB Launch Template
+- RDB Auto Scaling group
 
 ##### AWS ElasticFileSystem (EFS)
+
 EFS is a Network File System (NFS) which any EC2 instance can mount.
 This solves the first problem with kdb-tick when the Tickerplant and RDB are on different servers.
 Without a common file system the RDB would not be able to replay the Tickerplant's log file on start up.
@@ -535,15 +603,24 @@ Another way to solve the tickerplant log problem would be to have a log streamer
 This process would replay the log for the RDB using `-11!`, and send the `upd` messages to the RDB over an IPC handle.
 
 ```
-TODO
-add logstreamer code
+.u.stream: {[tplog;start;end]
+    .u.start: start;
+    -11!(tplog;end);
+    delete start from `.u;
+ };
+
+upd:{
+    if[.u.start < .u.i+:1;
+            neg[.z.w] @ (`upd;x;y);
+            neg[.z.w][]]
+ }
 ```
 
 ##### Auto Scaling Groups
 
 An Auto Scaling group can use a Launch Template or Launch Configuration to launch EC2 instances.
 It will maintain a set number of instances, this number is specified by its `DesiredCapacity` metric.
-If any of it's instances go down, the group will launch a new one to replace it.
+If any of its instances go down, the group will launch a new one to replace it.
 
 In our case we will use a Launch Template, it will use the AMI we created with our code.
 It will also specify other details like the `InstaceType` and the `UserData` we want the server to run when it is booted up.

@@ -24,8 +24,13 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.tab: flip `time`handle`tabs`syms`queue`live`rolled`lastI!();
 `.u.asg.tab upsert (0Np;0Ni;();();`;0b;0b;0N);
 
+/ t - A list of tables (or \` for all).
+/ s - Lists of symbol lists to subscribe to for the tables.
+/ q - The name of the queue to be added to.
 .u.asg.sub:{[t;s;q]
-    -1 "New process subscribing: on handle ",string .z.w;
+    if[-11h = type t;
+        t: enlist t;
+        s: enlist s];
 
     if[not (=) . count each (t;s);
             '"Count of table and symbol lists must match" ];
@@ -33,74 +38,40 @@ sub:{subInner[x;y;.z.w]}
     if[not all missing: t in .u.t,`;
             '.Q.s1[t where not missing]," not available" ];
 
-    / add new process to subscriber table
     `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0b; 0b; 0N);
 
-    / check if there is a live subscriber
-    / start publishing to the handle if there is not
     if[not count select from .u.asg.tab where live, queue = q;
-            .u.asg.add[t;s;.z.w] ];
-
-    .u.asg.showInfo[];
+            .u.asg.add[.z.w;t;s]];
  };
 
+/ t - List of tables the RDB wants to subscribe to.
+/ s - Symbol lists the RDB wants to subscribe to.
+/ h - The handle of the RDB.
 .u.asg.add:{[t;s;h]
-    / mark this handle as the live subscriber
     update live:1b from `.u.asg.tab where handle = h;
-
-    / add subscriber to .u.w
-    schemas: $[-11h = type t;
-                    enlist .u.subInner[t;s;h];
-                    .u.subInner[;;h] .' flip (t;s)];
-
-    / find the last message sent to a subscriber
-    startI: max 0^ exec lastI from .u.asg.tab;
-
-    / tell the new subscriber to replay tickerplant log from that message
-    neg[h] (`.sub.rep; schemas; .u.L; (startI;.u.i));
+    schemas: .u.subInner[;;h] .' flip (t;s);
+    neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
  };
 
+/ h    - handle of the RDB
+/ subI - last processed upd message
 .u.asg.roll:{[h;subI]
-    -1 "Subscriber on handle as ",(string h)," has stopped subscribing";
     cfg: exec from .u.asg.tab where handle = h;
-
-    / mark process as rolled
     update live:0b, rolled:1b, lastI:subI from `.u.asg.tab where handle = h;
-
-    / delete handle from .u.w
     .u.del[;h] each cfg`tabs;
-
-    / find the next subscriber for the same tables and syms
-    queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
-
-    if[not count queue;
-        :-1 "No process in the subscriber queue" ];
-
-    / start publishing to the first process in the queue
-    .u.asg.add . first[queue]`tabs`syms`handle;
-
-    .u.asg.showInfo[];
+    if[count queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
+            .u.asg.add . first[queue]`tabs`syms`handle ];
  };
 
 .u.asg.end:{[]
-    -1  "Clearing data from rolled ASG subscribers";
     rolled: exec handle from .u.asg.tab where not null handle, rolled, not live;
     rolled @\: (`.u.end; .u.d);
     delete from `.u.asg.tab where rolled;
-
-    .u.asg.showInfo[];
  };
 
+/ h - handle of disconnected subscriber
 .u.asg.zpc:{[h]
-    / roll subscriber with 0 completed upd msgs if connection to the live subscriber is lost
     if[0b^ first exec live from .u.asg.tab where handle = h;
-            .u.asg.roll[h;0] ];
-
+            .u.asg.roll[h;0]];
     update handle:0Ni from `.u.asg.tab where handle = h;
- };
-
-.u.asg.showInfo:{[]
-    if[n:count .u.asg.tab;
-            -1  string[n]," subscribers connected from Autoscaling Groups";
-            show .u.asg.tab ];
  };
