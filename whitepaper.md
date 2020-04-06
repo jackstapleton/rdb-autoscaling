@@ -149,20 +149,21 @@ The Tickerplant will store these details in `.u.asg.tab`.
 
 When it is time to roll to the next subscriber the Tickerplant will query this table for the next RDB in the queue.
 It will take the handle, tables and symbols and add them to `.u.w`.
-kdb-ticks funcionality will then take over and start publishing to the new RDB.
+kdb-ticks functionality will then take over and start publishing to the new RDB.
 
 ```q
-/ time   - time the subscriber was added.
-/ handle - handle of the subscriber.
-/ tabs   - tables the subscriber has subscribed for.
-/ syms   - syms the subscriber has subscribed for.
-/ queue  - queue the subscriber is a part of.
-/ live   - whether the subscriber is currently being published to.
-/ rolled - whether the subscriber has unsubscribed.
-/ lastI  - last message sent to the subscriber.
+/ table used to handle subscriptions
+/   time   - time the subscriber was added
+/   handle - handle of the subscriber
+/   tabs   - tables the subscriber has subscribed for
+/   syms   - syms the subscriber has subscribed for
+/   queue  - queue the subscriber is a part of
+/   live   - time the tickerplant started publishing to the subscriber
+/   rolled - time the subscriber unsubscribed
+/   lastI  - last message sent to the subscriber
 
 .u.asg.tab: flip `time`handle`tabs`syms`queue`live`rolled`lastI!();
-`.u.asg.tab upsert (0Np;0Ni;();();`;0b;0b;0N);
+`.u.asg.tab upsert (0Np;0Ni;();();`;0Np;0Np;0N);
 ```
 
 ### Adding Subscribers
@@ -180,8 +181,8 @@ This means the RDBs in the cluster cannot make multiple `.u.asg.sub` calls.
 
 .u.asg.sub:{[t;s;q]
     if[-11h = type t;
-        t: enlist t;
-        s: enlist s];
+            t: enlist t;
+            s: enlist s];
 
     if[not (=) . count each (t;s);
             '"Count of table and symbol lists must match" ];
@@ -223,7 +224,7 @@ There are two instances when this is called:
 / h - The handle of the RDB.
 
 .u.asg.add:{[t;s;h]
-    update live:1b from `.u.asg.tab where handle = h;
+    update live:.z.p from `.u.asg.tab where handle = h;
     schemas: .u.subInner[;;h] .' flip (t;s);
     neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
  };
@@ -354,23 +355,24 @@ From tahat point The RDB will no longer receive data from the Tickerplant, but i
 .sub.roll:{[]
     .sub.live: 0b;
     .sub.rolled: 1b;
-    `upd set .sub.disconnectUpd;
+    `upd set {[x;y] (::)};
     .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
  };
-
-.sub.disconnectUpd: {[t;x] (::)};
 ```
 
-`.sub.roll` marks `.sub.live` as false and `.sub.rolled` as true and `upd` is set to `.sub.disconnectedUpd` so that no further `upd` messages are processed.
+`.sub.roll` marks `.sub.live` as false and `.sub.rolled` as true and `upd` is set to `{[x;y] (::)}` so that no further `upd` messages are processed.
 It will also call `.u.asg.roll` on the Tickerplant, using its own handle and `.sub.i` as arguments.
 
 ```q
+/ h    - handle of the RDB
+/ subI - last processed upd message
+
 .u.asg.roll:{[h;subI]
     cfg: exec from .u.asg.tab where handle = h;
-    update live:0b, rolled:1b, lastI:subI from `.u.asg.tab where handle = h;
+    update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
     .u.del[;h] each cfg`tabs;
-    if[count queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
-            .u.asg.add . first[queue]`tabs`syms`handle ];
+    if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
+            .u.asg.add . first[queue]`tabs`syms`handle];
  };
 ```
 
@@ -396,9 +398,9 @@ When end of data occurs the Tickerplant will call `.u.end`.
 
 ```q
 .u.asg.end:{[]
-    rolled: exec handle from .u.asg.tab where not null handle, rolled, not live;
+    rolled: exec handle from .u.asg.tab where not null handle, not null rolled;
     rolled @\: (`.u.end; .u.d);
-    delete from `.u.asg.tab where rolled;
+    delete from `.u.asg.tab where not null rolled;
  };
 ```
 
@@ -449,7 +451,7 @@ system "l asg/u.q"
 
 ```q
 .u.asg.zpc:{[h]
-    if[0b^ first exec live from .u.asg.tab where handle = h;
+    if[not null first exec live from .u.asg.tab where handle = h;
             .u.asg.roll[h;0]];
     update handle:0Ni from `.u.asg.tab where handle = h;
  };
@@ -510,9 +512,7 @@ Where `10.0.0.1` is the Private Ip address of the Tickerplant's server.
 system "l asg/util.q"
 system "l asg/sub.q"
 
-while[null .sub.TP: @[{hopen `$":", .u.x: x}; .z.x 0; 0Ni];
-        -1 string[.z.p]," retrying tickerplant - ",.u.x;
-        system "sleep 1" ];
+while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 
 .aws.instanceId: .util.aws.getInstanceId[];
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];
@@ -536,8 +536,14 @@ Opening its handle to the Tickerplant is done in a retry loop just in case the T
 
 It then sets the globals outlined below.
 
-
-
+- .aws.instanceId - instance id of its EC2 instance.
+- .aws.groupName - name of its Auto Scaling group.
+- .sub.scaleThreshold - memory percentage threshold to scale out.
+- .sub.rollThreshold - memory percentage threshold to unsubscribe.
+- .sub.live - whether Tickerplant is currently it sending data.
+- .sub.scaled - whether it has launched a new instance.
+- .sub.rolled - whether it has unsubscribed.
+- .sub.i - count of `upd` messages queue has processed.
 
 ## AWS Setup
 

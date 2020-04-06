@@ -1,4 +1,4 @@
-/ asg/util.q
+// asg/util.q
 
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' .util.sys.runWithRetry "free") except\: enlist ""};
 .util.getMemUsage:{100 * 1 - (%) . .util.free[][`Mem;`free`total]};
@@ -46,10 +46,7 @@
  };
 
 .util.aws.scale:{[groupName]
-    needed: 1 + .util.aws.getDesiredCapacity groupName;
-    .util.aws.setDesiredCapacity[groupName;needed];
-    while[not needed = .util.aws.getDesiredCapacity groupName;
-            .util.aws.setDesiredCapacity[groupName;needed] ];
+    .util.aws.setDesiredCapacity[groupName] 1 + .util.aws.getDesiredCapacity groupName;
  };
 
 .util.aws.terminate:{[instanceId]

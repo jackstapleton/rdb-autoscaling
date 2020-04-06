@@ -1,14 +1,13 @@
+// asg/u.q
 
 / .u.add and .u.sub changed to take handle as a 3rd argument instead of using .z.w
 \d .u
-
 / use 'z' instead of .z.w
 add:{$[(count w x)>i:w[x;;0]?z;.[`.u.w;(x;i;1);union;y];w[x],:enlist(z;y)];(x;$[99=type v:value x;sel[v]y;@[0#v;`sym;`g#]])}
 
 / use 'z' instead of .z.w, and input as 3rd argument to .u.add
 subInner:{if[x~`;:sub[;y]each t];if[not x in t;'x];del[x]z;add[x;y;z]}
 sub:{subInner[x;y;.z.w]}
-
 \d .
 
 / table used to handle subscriptions
@@ -17,20 +16,19 @@ sub:{subInner[x;y;.z.w]}
 /   tabs   - tables the subscriber has subscribed for
 /   syms   - syms the subscriber has subscribed for
 /   queue  - queue the subscriber is a part of
-/   live   - whether the subscriber is currently being published to
-/   rolled - whether the subscriber has cut its subscription
+/   live   - time the tickerplant addd the subscriber to .u.w
+/   rolled - time the subscriber unsubscribed
 /   lastI  - last message sent to the subscriber
-
 .u.asg.tab: flip `time`handle`tabs`syms`queue`live`rolled`lastI!();
-`.u.asg.tab upsert (0Np;0Ni;();();`;0b;0b;0N);
+`.u.asg.tab upsert (0Np;0Ni;();();`;0Np;0Np;0N);
 
 / t - A list of tables (or \` for all).
 / s - Lists of symbol lists to subscribe to for the tables.
 / q - The name of the queue to be added to.
 .u.asg.sub:{[t;s;q]
     if[-11h = type t;
-        t: enlist t;
-        s: enlist s];
+            t: enlist t;
+            s: enlist s];
 
     if[not (=) . count each (t;s);
             '"Count of table and symbol lists must match" ];
@@ -38,9 +36,9 @@ sub:{subInner[x;y;.z.w]}
     if[not all missing: t in .u.t,`;
             '.Q.s1[t where not missing]," not available" ];
 
-    `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0b; 0b; 0N);
+    `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0Np; 0Np; 0N);
 
-    if[not count select from .u.asg.tab where live, queue = q;
+    if[not count select from .u.asg.tab where null live, queue = q;
             .u.asg.add[.z.w;t;s]];
  };
 
@@ -48,7 +46,7 @@ sub:{subInner[x;y;.z.w]}
 / s - Symbol lists the RDB wants to subscribe to.
 / h - The handle of the RDB.
 .u.asg.add:{[t;s;h]
-    update live:1b from `.u.asg.tab where handle = h;
+    update live:.z.p from `.u.asg.tab where handle = h;
     schemas: .u.subInner[;;h] .' flip (t;s);
     neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
  };
@@ -57,21 +55,21 @@ sub:{subInner[x;y;.z.w]}
 / subI - last processed upd message
 .u.asg.roll:{[h;subI]
     cfg: exec from .u.asg.tab where handle = h;
-    update live:0b, rolled:1b, lastI:subI from `.u.asg.tab where handle = h;
+    update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
     .u.del[;h] each cfg`tabs;
-    if[count queue: select from .u.asg.tab where not live, not rolled, queue = cfg`queue;
-            .u.asg.add . first[queue]`tabs`syms`handle ];
+    if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
+            .u.asg.add . first[queue]`tabs`syms`handle];
  };
 
 .u.asg.end:{[]
-    rolled: exec handle from .u.asg.tab where not null handle, rolled, not live;
+    rolled: exec handle from .u.asg.tab where not null handle, not null rolled;
     rolled @\: (`.u.end; .u.d);
-    delete from `.u.asg.tab where rolled;
+    delete from `.u.asg.tab where not null rolled;
  };
 
 / h - handle of disconnected subscriber
 .u.asg.zpc:{[h]
-    if[0b^ first exec live from .u.asg.tab where handle = h;
+    if[not null first exec live from .u.asg.tab where handle = h;
             .u.asg.roll[h;0]];
     update handle:0Ni from `.u.asg.tab where handle = h;
  };

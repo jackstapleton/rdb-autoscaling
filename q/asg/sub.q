@@ -16,7 +16,7 @@
  };
 
 / upd wrapper
-/ only adds data from lgo window
+/ only adds data from log window
 / monitors memory every 100 messages
 .sub.replayUpd:{[t;data]
     if[.sub.i > .sub.start;
@@ -54,12 +54,9 @@
 .sub.roll:{[]
     .sub.live: 0b;
     .sub.rolled: 1b;
-    `upd set .sub.disconnectUpd;
+    `upd set {[x;y] (::)};
     .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
  };
-
-/ upd function for when process has unsubscribed
-.sub.disconnectUpd: {[t;x] (::)};
 
 / clear data from all tables from before a certain time
 / terminate the the server if no data is left and the process has cut its subscription

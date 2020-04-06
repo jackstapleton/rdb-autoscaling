@@ -6,6 +6,7 @@ system "l asg/sub.q"
 / open connection to tickerplant and gateway
 while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 
+/ ec2 instance id and asg groupname needed to scale asg in and out
 .aws.instanceId: .util.aws.getInstanceId[];
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];
 
@@ -24,12 +25,7 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 / clear data at end of day
 .u.end: {[dt] .sub.clear dt+1};
 
-/ tickerplant saves subscriptions
-/ so all tab and sym subscriptions must be sent at once
-/ .u.asg.sub[tabList;symLists;shardName]
-/ e.g. neg[.sub.TP] (`.u.asg.sub;`;`;`shard1)
-/ e.g. neg[.sub.TP] (`.u.asg.sub;`Trade;`;`shard2)
-/ e.g. neg[.sub.TP] (`.u.asg.sub;`Quote;`GM`MSFT`APPL`JPM;`shard3)
-/ e.g. neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
-
+/ tickerplant kicks off log replay
+/ so duplicate .u.asg.sub calls cannot be made at
+/ e.g., neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
 neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
