@@ -1,6 +1,6 @@
 // asg/util.q
 
-.util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' .util.sys.runWithRetry "free") except\: enlist ""};
+.util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' system "free") except\: enlist ""};
 .util.getMemUsage:{100 * 1 - (%) . .util.free[][`Mem;`free`total]};
 
 / aws cli commands should be wrapped in a retry loop as they may timeout when aws is under load
@@ -51,4 +51,17 @@
 
 .util.aws.terminate:{[instanceId]
     .j.k "\n" sv .util.sys.runWithRetry "aws autoscaling terminate-instance-in-auto-scaling-group --instance-id ",instanceId," --should-decrement-desired-capacity"
+ };
+
+/ aws cloudwatch put-metric-data
+.util.aws.putMetricData:{[namespace;dimensions;metric;unit;data]
+    .util.sys.runWithRetry "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data
+ };
+
+.util.aws.putUsedMemory:{[instanceId;groupName;memory]
+    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
+ };
+
+.util.aws.putMemoryUsage:{[instanceId;groupName;memory]
+    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
  };
