@@ -10,6 +10,7 @@ upd:insert;
 
 / end of day: save, clear, hdb reload
 .u.end:{t:tables`.;t@:where `g=attr each t@\:`sym;.Q.hdpf[`$":",.u.x 1;`:.;x;`sym];@[;`sym;`g#] each t;};
+.u.end:{t:tables`.;![;enlist(<;`time;x);0b;`$()]each t;@[;`sym;`g#]each t;}
 
 / init schema and sync up from log file;cd to hdb(so client save can run)
 .u.rep:{(.[;();:;].)each x;if[null first y;:()];-11!y;system "cd ",1_-10_string first reverse y};
