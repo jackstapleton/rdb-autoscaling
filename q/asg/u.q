@@ -26,6 +26,8 @@ sub:{subInner[x;y;.z.w]}
 / s - Lists of symbol lists to subscribe to for the tables.
 / q - The name of the queue to be added to.
 .u.asg.sub:{[t;s;q]
+    .util.lg "Process subscribing to queue - ",string[q]," on handle ", string .z.w;
+
     if[-11h = type t;
             t: enlist t;
             s: enlist s];
@@ -40,12 +42,16 @@ sub:{subInner[x;y;.z.w]}
 
     if[not count select from .u.asg.tab where null live, queue = q;
             .u.asg.add[.z.w;t;s]];
+
+    show .u.asg.tab
  };
 
 / t - List of tables the RDB wants to subscribe to.
 / s - Symbol lists the RDB wants to subscribe to.
 / h - The handle of the RDB.
 .u.asg.add:{[t;s;h]
+    .util.lg "Adding process on handle ",string[h]," to .u.w";
+
     update live:.z.p from `.u.asg.tab where handle = h;
     schemas: .u.subInner[;;h] .' flip (t;s);
     neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
@@ -54,21 +60,32 @@ sub:{subInner[x;y;.z.w]}
 / h    - handle of the RDB
 / subI - last processed upd message
 .u.asg.roll:{[h;subI]
+    .util.lg "Rolling subscriber on handle ", string h;
+
     cfg: exec from .u.asg.tab where handle = h;
     update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
     .u.del[;h] each cfg`tabs;
     if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle];
+
+    show .u.asg.tab;
  };
 
 .u.asg.end:{[]
+    .util.lg "End of Day has occured";
+    .util.lg "Sending .u.end to rolled subscribers";
+
     rolled: exec handle from .u.asg.tab where not null handle, not null rolled;
     rolled @\: (`.u.end; .u.d);
     delete from `.u.asg.tab where not null rolled;
+
+    show .u.asg.tab;
  };
 
 / h - handle of disconnected subscriber
 .u.asg.zpc:{[h]
+    .util.lg "Process on handle ",string[h]," has disconnected";
+
     if[not null first exec live from .u.asg.tab where handle = h;
             .u.asg.roll[h;0]];
     update handle:0Ni from `.u.asg.tab where handle = h;

@@ -29,3 +29,10 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 / so duplicate .u.asg.sub calls cannot be made at
 / e.g., neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
 neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
+
+.z.ts:{[]
+    .util.hb;
+    .util.lgSubInfo[];
+    .util.putMemMetricsCW[];
+ };
+system "t 200";

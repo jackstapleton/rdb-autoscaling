@@ -54,14 +54,53 @@
  };
 
 / aws cloudwatch put-metric-data
-.util.aws.putMetricData:{[namespace;dimensions;metric;unit;data]
+.util.aws.putMetricDataCW:{[namespace;dimensions;metric;unit;data]
     .util.sys.runWithRetry "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data
  };
 
-.util.aws.putUsedMemory:{[instanceId;groupName;memory]
-    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
+.util.aws.putUsedMemoryCW:{[instanceId;groupName;memory]
+    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
  };
 
-.util.aws.putMemoryUsage:{[instanceId;groupName;memory]
-    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
+.util.aws.putMemoryPercentCW:{[instanceId;groupName;memory]
+    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
+ };
+
+/ logging functions
+.util.const.ip: "." sv string `int$ 0x0 vs .z.a;
+.util.tmp.hbTime: .z.p;
+.util.tmp.subTime: .z.p;
+.util.tmp.metricTime: .z.p;
+.util.tmp.asgTime: .z.p;
+
+.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;x);};
+.util.string: {$[not type x; .z.s each x; 10h = abs type x; x; string x]};
+
+.util.hb:{[]
+    if[not .z.p > .util.tmp.hbTime + 00:00:30; :(::)];
+    .util.lg "HEARTBEAT";
+    .util.tmp.hbTime: .z.p;
+ };
+
+.util.putMemMetricsCW:{[]
+    if[not .z.p > .util.tmp.metricTime + 00:02; :(::)];
+    mem: .util.free[]`Mem;
+    .util.aws.putUsedMemoryCW mem`used;
+    perc:100 * 1 - (%) . mem`free`total;
+    .util.aws.putMemoryPercentCW perc;
+    .util.lg "Percentage memory usage of server at - ",string[perc],"%";
+    .util.tmp.metricTime: .z.p;
+ };
+
+.util.lgSubInfo:{[]
+    if[not .z.p > .util.tmp.subTime + 00:05; :(::)];
+    .util.lg ".sub.i = ", string .sub.i;
+    .util.tmp.subTime: .z.p;
+ };
+
+.util.lgAsgInfo:{[]
+    if[not .z.p > .util.tmp.asgTime + 00:05; :(::)];
+    .util.lg ".u.i = ", string .u.i;
+    show .u.asg.tab;
+    .util.tmp.asgTime: .z.p;
  };
