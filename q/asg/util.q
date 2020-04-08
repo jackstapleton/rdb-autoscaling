@@ -54,14 +54,14 @@
  };
 
 / aws cloudwatch put-metric-data
-.util.aws.putMetricData:{[namespace;dimensions;metric;unit;data]
+.util.aws.putMetricDataCW:{[namespace;dimensions;metric;unit;data]
     .util.sys.runWithRetry "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data
  };
 
-.util.aws.putUsedMemory:{[instanceId;groupName;memory]
-    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
+.util.aws.putUsedMemoryCW:{[instanceId;groupName;memory]
+    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
  };
 
-.util.aws.putMemoryUsage:{[instanceId;groupName;memory]
-    .util.aws.putMetricData["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
+.util.aws.putMemoryUsageCW:{[instanceId;groupName;memory]
+    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
  };

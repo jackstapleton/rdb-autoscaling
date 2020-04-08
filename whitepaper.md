@@ -192,8 +192,8 @@ This means the RDBs in the cluster cannot make multiple `.u.asg.sub` calls.
 
     `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0b; 0b; 0N);
 
-    if[not count select from .u.asg.tab where live, queue = q;
-            .u.asg.add[.z.w;t;s]];
+    if[not count select from .u.asg.tab where not null live, null rolled, queue = q;
+            .u.asg.add[t;s;.z.w]];
  };
 ```
 
@@ -325,7 +325,7 @@ The last function of `.sub.rep` is to start the monitoring process.
         ];
     if[not .sub.rolled;
         if[.util.getMemUsage[] > .sub.rollThreshold;
-                .sub.unsub[];
+                .sub.roll[];
                 ];
         ];
  };
@@ -512,7 +512,7 @@ Where `10.0.0.1` is the Private Ip address of the Tickerplant's server.
 system "l asg/util.q"
 system "l asg/sub.q"
 
-while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
+while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni]];
 
 .aws.instanceId: .util.aws.getInstanceId[];
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];

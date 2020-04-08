@@ -45,7 +45,7 @@
         ];
     if[not .sub.rolled;
         if[.util.getMemUsage[] > .sub.rollThreshold;
-                .sub.unsub[];
+                .sub.roll[];
                 ];
         ];
  };
