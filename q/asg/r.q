@@ -33,6 +33,6 @@ neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
 .z.ts:{[]
     .util.hb[];
     .util.lgSubInfo[];
-    .util.putMemMetricsCW[];
+    .util.putSubMetricsCW[];
  };
 system "t 200";
