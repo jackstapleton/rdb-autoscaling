@@ -85,6 +85,7 @@
 .util.putMemMetricsCW:{[]
     if[not .z.p > .util.tmp.metricTime + 00:02; :(::)];
     mem: .util.free[]`Mem;
+    .sub.monitorMemory[];
     .util.aws.putUsedMemoryCW[.aws.instanceId;.aws.groupName] mem`used;
     perc:100 * 1 - (%) . mem`free`total;
     .util.aws.putMemoryPercentCW[.aws.instanceId;.aws.groupName] perc;
