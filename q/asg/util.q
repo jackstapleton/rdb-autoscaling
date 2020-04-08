@@ -94,7 +94,7 @@
     .util.lg "Percentage memory usage of server at - ",string[perc],"%";
     .util.aws.putMemoryPercentCW[.aws.instanceId;.aws.groupName] perc;
     .util.aws.putUsedMemoryCW[.aws.instanceId;.aws.groupName] mem`used;
-    if[.sub.live; .util.aws.putUpdCountCW[instanceId;groupName] .sub.i];
+    if[.sub.live; .util.aws.putUpdCountCW[.aws.instanceId;.aws.groupName] .sub.i];
     .util.tmp.metricTime: .z.p;
  };
 
