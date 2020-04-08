@@ -31,19 +31,19 @@ case "$app" in
         q tick.q sym $tplog_dir -p 5010 -c 30 200 -e 1
         ;;
     tick-asg )
-        q tick-asg.q sym $tplog_dir -p 5010 -c 30 200 -e 1
+        q tickasg.q sym $tplog_dir -p 5010 -c 30 200 -e 1
         ;;
     r )
         q tick/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
         ;;
     r-asg )
-        q asg/r-asg.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
+        q asg/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
         ;;
     w )
         q tick/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
         ;;
     w-asg )
-        q asg/w-asg.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
+        q asg/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
         ;;
     gw-asg )
         q asg/gw.q $TPHOST:5010 $GWHOST:5012 -p 5012 -c 30 200 -e 1

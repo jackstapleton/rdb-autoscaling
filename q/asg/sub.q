@@ -42,7 +42,7 @@
 .sub.monitorMemory:{[]
     if[not .sub.scaled;
         if[.util.getMemUsage[] > .sub.scaleThreshold;
-                .util.lg "Server has reached ",.sub.scaleThreshold,"% memory usage";
+                .util.lg "Server has reached ",string[.sub.scaleThreshold],"% memory usage";
                 .util.lg "Scaling the Auto Scaling group";
 
                 .util.aws.scale .aws.groupName;
@@ -52,7 +52,7 @@
         ];
     if[not .sub.rolled;
         if[.util.getMemUsage[] > .sub.rollThreshold;
-                .util.lg "Server has reached ",.sub.rollThreshold,"% memory usage";
+                .util.lg "Server has reached ",string[.sub.rollThreshold],"% memory usage";
                 .util.lg "Unsubscribing from the Tickerplant";
 
                 .sub.roll[];

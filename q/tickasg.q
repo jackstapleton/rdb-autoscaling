@@ -2,7 +2,7 @@
 
 / launch kdb-tick and load .u.asg code
 system "l tick.q"
-system "l asg/u-asg.q"
+system "l asg/u.q"
 
 / rewrite .z.pc to run tick and asg .z.pc
 .tick.zpc: .z.pc;
@@ -15,8 +15,8 @@ system "l asg/u-asg.q"
 system "l asg/util.q"
 .tick.ts: .z.ts;
 .z.ts:{[]
-    .tick.ts;
-    .util.hb;
+    .tick.ts[];
+    .util.hb[];
     .util.lgAsgInfo[];
  };
 system "t 200";

@@ -4,7 +4,7 @@ system "l asg/util.q"
 system "l asg/sub.q"
 
 / open connection to tickerplant and gateway
-while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
+while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni] ];
 
 / ec2 instance id and asg groupname needed to scale asg in and out
 .aws.instanceId: .util.aws.getInstanceId[];
@@ -31,7 +31,7 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
 
 .z.ts:{[]
-    .util.hb;
+    .util.hb[];
     .util.lgSubInfo[];
     .util.putMemMetricsCW[];
  };
