@@ -40,8 +40,8 @@ sub:{subInner[x;y;.z.w]}
 
     `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0Np; 0Np; 0N);
 
-    if[not count select from .u.asg.tab where null live, queue = q;
-            .u.asg.add[.z.w;t;s]];
+    if[not count select from .u.asg.tab where not null live, null rolled, queue = q;
+            .u.asg.add[t;s;.z.w]];
 
     show .u.asg.tab
  };
