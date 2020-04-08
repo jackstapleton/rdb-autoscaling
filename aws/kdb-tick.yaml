@@ -50,7 +50,7 @@ Resources:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -94,10 +94,9 @@ Resources:
 
   RdbASGMicro:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -141,10 +140,9 @@ Resources:
 
   RdbASGSmall:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -188,10 +186,9 @@ Resources:
 
   RdbASGMedium:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -235,10 +232,9 @@ Resources:
 
   RdbASGLarge:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -282,10 +278,9 @@ Resources:
 
   RdbASGXLarge:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
@@ -329,17 +324,16 @@ Resources:
 
   RdbASG2XLarge:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
     Properties:
       Cooldown: 300
-      DesiredCapacity: 1
+      DesiredCapacity: 0
       HealthCheckGracePeriod: 60
       HealthCheckType: EC2
       LaunchTemplate:
         LaunchTemplateId: !Ref RdbLaunchTemplate2XLarge
         Version: 1
       MaxSize: 1
-      MinSize: 1
+      MinSize: 0
       Tags:
         - Key: APP
           PropagateAtLaunch: True
