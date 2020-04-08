@@ -66,6 +66,10 @@
     .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
  };
 
+.util.aws.putUpdCountCW:{[instanceId;groupName;i]
+    .util.aws.putMetricDataCW["RdbCluster";"AutoScalingGroup=",groupName;"UpdMessages";"Count";string i];
+ };
+
 / logging functions
 .util.const.ip: "." sv string `int$ 0x0 vs .z.a;
 .util.tmp.hbTime: .z.p;
@@ -82,14 +86,15 @@
     .util.tmp.hbTime: .z.p;
  };
 
-.util.putMemMetricsCW:{[]
+.util.putSubMetricsCW:{[]
     if[not .z.p > .util.tmp.metricTime + 00:02; :(::)];
-    mem: .util.free[]`Mem;
     .sub.monitorMemory[];
-    .util.aws.putUsedMemoryCW[.aws.instanceId;.aws.groupName] mem`used;
+    mem: .util.free[]`Mem;
     perc:100 * 1 - (%) . mem`free`total;
-    .util.aws.putMemoryPercentCW[.aws.instanceId;.aws.groupName] perc;
     .util.lg "Percentage memory usage of server at - ",string[perc],"%";
+    .util.aws.putMemoryPercentCW[.aws.instanceId;.aws.groupName] perc;
+    .util.aws.putUsedMemoryCW[.aws.instanceId;.aws.groupName] mem`used;
+    if[.sub.live; .util.aws.putUpdCountCW[instanceId;groupName] .sub.i];
     .util.tmp.metricTime: .z.p;
  };
 
