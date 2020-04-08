@@ -101,6 +101,6 @@
 .util.lgAsgInfo:{[]
     if[not .z.p > .util.tmp.asgTime + 00:05; :(::)];
     .util.lg ".u.i = ", string .u.i;
-    show .u.asg.tab;
+    if[count .u.asg.tab; show .u.asg.tab];
     .util.tmp.asgTime: .z.p;
  };

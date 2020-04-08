@@ -31,7 +31,7 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni];
 neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
 
 .z.ts:{[]
-    .util.hb;
+    .util.hb[];
     .util.lgSubInfo[];
     .util.putMemMetricsCW[];
  };
