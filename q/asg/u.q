@@ -77,12 +77,12 @@ sub:{subInner[x;y;.z.w]}
     show .u.w
  };
 
-.u.asg.end:{[]
+.u.asg.end:{[dt]
     .util.lg "End of Day has occured";
     .util.lg "Sending .u.end to rolled subscribers";
 
     rolled: exec handle from .u.asg.tab where not null handle, not null rolled;
-    rolled @\: (`.u.end; .u.d);
+    neg[rolled] @\: (`.u.end; dt);
     delete from `.u.asg.tab where not null rolled;
 
     show .u.asg.tab;
