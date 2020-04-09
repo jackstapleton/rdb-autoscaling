@@ -6,7 +6,7 @@
 add:{$[(count w x)>i:w[x;;0]?z;.[`.u.w;(x;i;1);union;y];w[x],:enlist(z;y)];(x;$[99=type v:value x;sel[v]y;@[0#v;`sym;`g#]])}
 
 / use 'z' instead of .z.w, and input as 3rd argument to .u.add
-subInner:{if[x~`;:sub[;y]each t];if[not x in t;'x];del[x]z;add[x;y;z]}
+subInner:{if[x~`;:subInner[;y;z]each t];if[not x in t;'x];del[x]z;add[x;y;z]}
 sub:{subInner[x;y;.z.w]}
 \d .
 
@@ -56,7 +56,7 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.roll:{[h;subI]
     cfg: exec from .u.asg.tab where handle = h;
     update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
-    .u.del[;h] each cfg`tabs;
+    .u.del[;h] each .u.t;
     if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle];
  };
