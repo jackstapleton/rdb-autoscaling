@@ -64,7 +64,7 @@ sub:{subInner[x;y;.z.w]}
 
     cfg: exec from .u.asg.tab where handle = h;
     update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
-    .u.del[;h] each cfg`tabs;
+    .u.del[;h] each $[` in cfg`tabs; .u.t; cfg`tabs];
     if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle];
 

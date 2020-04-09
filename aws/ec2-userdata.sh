@@ -3,6 +3,8 @@
 export KDBUSER=ec2-user
 export USERHOME=/home/ec2-user
 
+chown -R ec2-user:ec2-user /opt/rdb-autoscaling
+
 # configure aws cli
 AZ=$(ec2-metadata -z | cut -d ' ' -f 2)
 echo -e "[default]\nregion=${AZ::-1}\noutput=json" > ${USERHOME}/.aws/config
