@@ -38,7 +38,7 @@ neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
             .util.lg "Percentage memory usage of server at - ",string[.util.getMemUsage[]],"%";
             .util.lg ".sub.i = ", string .sub.i;
             if[.sub.live;
-                .util.aws.putUpdCountCW["RdbCluster";"AutoScalingGroups=",aws.groupName;"UpdCount";"Count";string .sub.i]];
+                .util.aws.putUpdCountCW["RdbCluster";"AutoScalingGroups=",.aws.groupName;"UpdCount";"Count";string .sub.i]];
             .util.tmp.subTime: .z.p;
             ];
  };
