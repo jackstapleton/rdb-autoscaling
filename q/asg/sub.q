@@ -67,7 +67,7 @@
     .sub.live: 0b;
     .sub.rolled: 1b;
     `upd set {[x;y] (::)};
-    .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
+    neg[.sub.TP] @ ({.u.asg.roll[.z.w;x]}; .sub.i);
  };
 
 / clear data from all tables from before a certain time

@@ -87,7 +87,7 @@
  };
 
 .util.putSubMetricsCW:{[]
-    if[not .z.p > .util.tmp.metricTime + 00:02; :(::)];
+    if[not .z.p > .util.tmp.metricTime + 00:01; :(::)];
     .sub.monitorMemory[];
     mem: .util.free[]`Mem;
     perc:100 * 1 - (%) . mem`free`total;
@@ -99,13 +99,13 @@
  };
 
 .util.lgSubInfo:{[]
-    if[not .z.p > .util.tmp.subTime + 00:05; :(::)];
+    if[not .z.p > .util.tmp.subTime + 00:02; :(::)];
     .util.lg ".sub.i = ", string .sub.i;
     .util.tmp.subTime: .z.p;
  };
 
 .util.lgAsgInfo:{[]
-    if[not .z.p > .util.tmp.asgTime + 00:05; :(::)];
+    if[not .z.p > .util.tmp.asgTime + 00:02; :(::)];
     .util.lg ".u.i = ", string .u.i;
     if[count .u.asg.tab; show .u.asg.tab];
     .util.tmp.asgTime: .z.p;
