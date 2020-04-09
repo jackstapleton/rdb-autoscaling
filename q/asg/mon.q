@@ -13,10 +13,10 @@ metricUnits: enlist["Percent"], 6#enlist "Bytes";
 
 .z.ts:{[]
     .util.hb[];
-    if[.z.p > runTime + 00:30;
-            mem: .util.free[]`Mem;
+    if[.z.p > runTime + 00:00:30;
             vals: string perc, value mem;
             .util.lg "Sending Cloudwatch Metrics";
+            show mem: .util.free[]`Mem;
             .util.aws.putMetricDataCW[namespace;dimensions] .' flip (metricNames;metricUnits;vals);
             `runTime set .z.p;
             ];

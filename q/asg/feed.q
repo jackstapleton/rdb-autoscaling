@@ -15,7 +15,7 @@ lgTime: .z.p;
 .z.ts:{[]
     .util.hb[];
 
-    if[.z.p > lgTime + 01:00;
+    if[.z.p > lgTime + 00:01;
             .util.lg "Sending ",string[`int$ n * 0f^ factors hrs bin .z.t]," rows per batch";
             show sum each .z.W;
             `lgTime set .z.p

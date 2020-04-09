@@ -33,7 +33,7 @@ neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
 .util.tmp.subTime: .z.p;
 .z.ts:{[]
     .util.hb[];
-    if[.z.p > .util.tmp.subTime + 01:00;
+    if[.z.p > .util.tmp.subTime + 00:01;
             .sub.monitorMemory[];
             .util.lg "Percentage memory usage of server at - ",string[.util.getMemUsage[]],"%";
             .util.lg ".sub.i = ", string .sub.i;
