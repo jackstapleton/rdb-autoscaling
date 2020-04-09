@@ -57,7 +57,7 @@ sub:{subInner[x;y;.z.w]}
     schemas: .u.subInner[;;h] .' flip (t;s);
 
     q: exec queue from .u.asg.tab where handle = h;
-    startI: max 0^ exec lastI from .u.asg.tab where queue = q;
+    startI: max 0^ exec lastI from .u.asg.tab where queue in q;
 
     neg[h] (`.sub.rep; schemas; .u.L; (startI; .u.i));
  };
