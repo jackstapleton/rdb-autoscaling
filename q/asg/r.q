@@ -30,9 +30,16 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni] ];
 / e.g., neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
 neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
 
+.util.tmp.subTime: .z.p;
 .z.ts:{[]
     .util.hb[];
-    .util.lgSubInfo[];
-    .util.putSubMetricsCW[];
+    if[.z.p > .util.tmp.subTime + 01:00;
+            .sub.monitorMemory[];
+            .util.lg "Percentage memory usage of server at - ",string[.util.getMemUsage[]],"%";
+            .util.lg ".sub.i = ", string .sub.i;
+            if[.sub.live;
+                .util.aws.putUpdCountCW["RdbCluster";"AutoScalingGroups=",aws.groupName;"UpdCount";"Count";string .sub.i]];
+            .util.tmp.subTime: .z.p;
+            ];
  };
 system "t 200";

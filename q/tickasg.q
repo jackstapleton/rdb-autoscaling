@@ -13,10 +13,15 @@ system "l asg/u.q"
 .u.end: {.tick.end x; .u.asg.end x;};
 
 system "l asg/util.q"
+.util.tmp.asgTime: .z.p;
 .tick.ts: .z.ts;
 .z.ts:{[]
     .tick.ts[];
     .util.hb[];
-    .util.lgAsgInfo[];
+    if[.z.p > .util.tmp.asgTime + 00:02;
+            .util.lg ".u.i = ", string .u.i;
+            show desc sum each .z.W;
+            .util.tmp.asgTime: .z.p;
+            ];
  };
 system "t 200";

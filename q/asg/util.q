@@ -58,55 +58,15 @@
     .util.sys.runWithRetry "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data
  };
 
-.util.aws.putUsedMemoryCW:{[instanceId;groupName;memory]
-    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"UsedMemory";"Bytes";string memory];
- };
-
-.util.aws.putMemoryPercentCW:{[instanceId;groupName;memory]
-    .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
- };
-
-.util.aws.putUpdCountCW:{[instanceId;groupName;i]
-    .util.aws.putMetricDataCW["RdbCluster";"AutoScalingGroup=",groupName;"UpdMessages";"Count";string i];
- };
-
 / logging functions
 .util.const.ip: "." sv string `int$ 0x0 vs .z.a;
-.util.tmp.hbTime: .z.p;
-.util.tmp.subTime: .z.p;
-.util.tmp.metricTime: .z.p;
-.util.tmp.asgTime: .z.p;
-
-.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;x);};
 .util.string: {$[not type x; .z.s each x; 10h = abs type x; x; string x]};
+.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;x);};
 
+.util.tmp.hbTime: .z.p;
 .util.hb:{[]
-    if[not .z.p > .util.tmp.hbTime + 00:00:30; :(::)];
-    .util.lg "HEARTBEAT";
-    .util.tmp.hbTime: .z.p;
- };
-
-.util.putSubMetricsCW:{[]
-    if[not .z.p > .util.tmp.metricTime + 00:01; :(::)];
-    .sub.monitorMemory[];
-    mem: .util.free[]`Mem;
-    perc:100 * 1 - (%) . mem`free`total;
-    .util.lg "Percentage memory usage of server at - ",string[perc],"%";
-    .util.aws.putMemoryPercentCW[.aws.instanceId;.aws.groupName] perc;
-    .util.aws.putUsedMemoryCW[.aws.instanceId;.aws.groupName] mem`used;
-    if[.sub.live; .util.aws.putUpdCountCW[.aws.instanceId;.aws.groupName] .sub.i];
-    .util.tmp.metricTime: .z.p;
- };
-
-.util.lgSubInfo:{[]
-    if[not .z.p > .util.tmp.subTime + 00:02; :(::)];
-    .util.lg ".sub.i = ", string .sub.i;
-    .util.tmp.subTime: .z.p;
- };
-
-.util.lgAsgInfo:{[]
-    if[not .z.p > .util.tmp.asgTime + 00:02; :(::)];
-    .util.lg ".u.i = ", string .u.i;
-    if[count .u.asg.tab; show .u.asg.tab];
-    .util.tmp.asgTime: .z.p;
+    if[.z.p > .util.tmp.hbTime + 00:00:30;
+            .util.lg "HEARTBEAT";
+            .util.tmp.hbTime: .z.p;
+            ];
  };
