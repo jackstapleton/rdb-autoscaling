@@ -55,7 +55,11 @@ sub:{subInner[x;y;.z.w]}
 
     update live:.z.p from `.u.asg.tab where handle = h;
     schemas: .u.subInner[;;h] .' flip (t;s);
-    neg[h] (`.sub.rep; schemas; .u.L; (max 0^ exec lastI from .u.asg.tab; .u.i));
+
+    q: exec queue from .u.asg.tab where handle = h;
+    startI: max 0^ exec lastI from .u.asg.tab where queue = q;
+
+    neg[h] (`.sub.rep; schemas; .u.L; (startI; .u.i));
  };
 
 / h    - handle of the RDB
