@@ -10,14 +10,15 @@ n: 250;
 hrs: `time$07:00 08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00;
 factors:   .08   .2    .72   .91  .94   .92    1     .91   .37   0;
 
-zwTime: .z.p;
+lgTime: .z.p;
 
 .z.ts:{[]
     .util.hb[];
 
-    if[.z.p > .util.tmp.subTime + 01:00;
+    if[.z.p > lgTime + 01:00;
+            .util.lg "Sending ",string[`int$ n * 0f^ factors hrs bin .z.t]," rows per batch";
             show sum each .z.W;
-            `zwTime set .z.p
+            `lgTime set .z.p
             ];
 
     if[0 < N: `int$ n * 0f^ factors hrs bin .z.t;

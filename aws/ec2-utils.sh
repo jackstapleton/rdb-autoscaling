@@ -32,6 +32,6 @@ ec2_mount_efs () {
 
 asg_get_desired_capacity () {
     asg=$1
-    res=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name $ASG)
+    res=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name $asg)
     echo $res | python -c "import json, sys; print(json.load(sys.stdin)['AutoScalingGroups'][0]['DesiredCapacity'])"
 }
