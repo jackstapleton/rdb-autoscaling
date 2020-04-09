@@ -16,7 +16,7 @@ metricUnits: enlist["Percent"], 6#enlist "Bytes";
     if[.z.p > runTime + 00:00:30;
             .util.lg "Sending Cloudwatch Metrics";
             show mem: .util.free[]`Mem;
-            perc: 100 * 1 - (%) . .util.free[][`Mem;`free`total];
+            perc: 100 * (%) . mem`used`total;
             vals: string perc, value mem;
             .util.aws.putMetricDataCW[namespace;dimensions] .' flip (metricNames;metricUnits;vals);
             `runTime set .z.p;

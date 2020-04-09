@@ -1,7 +1,7 @@
 // asg/util.q
 
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' system "free") except\: enlist ""};
-.util.getMemUsage:{100 * 1 - (%) . .util.free[][`Mem;`free`total]};
+.util.getMemUsage:{100 * (%) . .util.free[][`Mem;`used`total]};
 
 / aws cli commands should be wrapped in a retry loop as they may timeout when aws is under load
 .util.sys.runWithRetry:{[cmd]
