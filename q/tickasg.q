@@ -20,7 +20,7 @@ system "l asg/util.q"
     .util.hb[];
     if[.z.p > .util.tmp.asgTime + 00:02;
             .util.lg ".u.i = ", string .u.i;
-            show desc sum each .z.W;
+            show .u.w;
             .util.tmp.asgTime: .z.p;
             ];
  };
