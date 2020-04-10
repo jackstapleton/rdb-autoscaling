@@ -19,5 +19,6 @@ upd:insert;
 / connect to ticker plant for (schema;(logcount;log))
 .u.rep .(hopen `$":",.u.x 0)"(.u.sub[`;`];`.u `i`L)";
 
+system "l asg/util.q";
 .z.ts: .util.hb;
 system "t 200";
