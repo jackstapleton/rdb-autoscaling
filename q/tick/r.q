@@ -1,6 +1,8 @@
 /q tick/r.q [host]:port[:usr:pwd] [host]:port[:usr:pwd]
 /2008.09.09 .k ->.q
 
+system "l asg/util.q";
+
 if[not "w"=first string .z.o;system "sleep 1"];
 
 upd:insert;
@@ -19,6 +21,5 @@ upd:insert;
 / connect to ticker plant for (schema;(logcount;log))
 .u.rep .(hopen `$":",.u.x 0)"(.u.sub[`;`];`.u `i`L)";
 
-system "l asg/util.q";
 .z.ts: .util.hb;
 system "t 200";
