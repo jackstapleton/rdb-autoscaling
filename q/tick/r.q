@@ -19,16 +19,5 @@ upd:insert;
 / connect to ticker plant for (schema;(logcount;log))
 .u.rep .(hopen `$":",.u.x 0)"(.u.sub[`;`];`.u `i`L)";
 
-.util.tmp.subTime: .z.p;
-.z.ts:{[]
-    .util.hb[];
-    if[.z.p > .util.tmp.subTime + 00:01;
-            .sub.monitorMemory[];
-            .util.lg "Percentage memory usage of server at - ",string[.util.getMemUsage[]],"%";
-            .util.lg ".sub.i = ", string .sub.i;
-            if[.sub.live;
-                .util.aws.putMetricDataCW["RdbCluster";"AutoScalingGroups=",.aws.groupName;"UpdCount";"Count";string .sub.i]];
-            .util.tmp.subTime: .z.p;
-            ];
- };
+.z.ts: .util.hb;
 system "t 200";
