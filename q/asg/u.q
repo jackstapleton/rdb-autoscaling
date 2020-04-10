@@ -54,7 +54,7 @@ sub:{subInner[x;y;.z.w]}
     .util.lg "Adding process on handle ",string[h]," to .u.w";
 
     update live:.z.p from `.u.asg.tab where handle = h;
-    schemas: .u.subInner[;;h] .' flip (t;s);
+    schemas: raze .u.subInner[;;h] .' flip (t;s);
 
     q: exec queue from .u.asg.tab where handle = h;
     startI: max 0^ exec lastI from .u.asg.tab where queue in q;

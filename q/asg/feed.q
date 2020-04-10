@@ -1,32 +1,35 @@
+/ q asg/feed.q
 
 system"l asg/util.q"
 
-tp: hopen "::5010";
+while[null tp: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni] ];
 
 i: tp `.u.i;
 j: 0;
 n: 250;
 
-hrs: `time$07:00 08:00 09:00 10:00 11:00 12:00 13:00 14:00 15:00 16:00;
-factors:   .08   .2    .72   .91  .94   .92    1     .91   .37   0;
+hrs: `time$00:00    07:00    08:00      09:00       10:00        11:00        12:00        13:00      14:00        15:00       16:00;
+intervals: 01:00:00 00:00:01 00:00:00:5 00:00:00:15 00:00:00:115 00:00:00:115 00:00:00:115 00:00:00:1 00:00:00:115 00:00:00:25 01:00:00;
 
 lgTime: .z.p;
+pubTime:.z.p;
 
 .z.ts:{[]
     .util.hb[];
 
     if[.z.p > lgTime + 00:01;
-            .util.lg "Sending ",string[`int$ n * 0f^ factors hrs bin .z.t]," rows per batch";
+            .util.lg "Sending batch every ",string intervals hrs bin .z.t;
             show sum each .z.W;
             `lgTime set .z.p
             ];
 
-    if[0 < N: `int$ n * 0f^ factors hrs bin .z.t;
-            fdata: `float$data:  105 - N?10;
-            neg[tp] @ (`.u.upd;`Quote;(N#.z.p;N?`APPL`N`GM`GOOGL`INTC`JP`MSFT;fdata;fdata;data;data));
-            neg[tp] @ (`.u.upd;`Trade;(N#.z.p;N?`APPL`N`GM`GOOGL`INTC`JP`MSFT;fdata;data));
-            i+:2; j+:N;
+    if[.z.p > pubTime + intervals hrs bin .z.t;
+            fdata: `float$data:  105 - n?10;
+            neg[tp] @ (`.u.upd;`Quote;(n#.z.p;n?`APPL`N`GM`GOOGL`INTC`JP`MSFT;fdata;fdata;data;data));
+            neg[tp] @ (`.u.upd;`Trade;(n#.z.p;n?`APPL`N`GM`GOOGL`INTC`JP`MSFT;fdata;data));
+            i+:2; j+:n;
+            `pubTime set .z.p;
             ];
  };
 
-system "t 100"
+system "t 50"
