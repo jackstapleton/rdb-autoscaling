@@ -13,7 +13,7 @@ metricUnits: enlist["Percent"], 6#enlist "Bytes";
 
 .z.ts:{[]
     .util.hb[];
-    if[.z.p > runTime + 00:02:30;
+    if[.z.p > runTime + 00:01:00;
             .util.lg "Sending Cloudwatch Metrics";
             show mem: .util.free[]`Mem;
             perc: 100 * (%) . mem`used`total;
