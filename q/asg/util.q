@@ -1,5 +1,7 @@
 // asg/util.q
 
+.util.isAws: not .z.h like "desktop*";
+
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' system "free") except\: enlist ""};
 .util.getMemUsage:{100 * (%) . .util.free[][`Mem;`used`total]};
 
@@ -16,7 +18,10 @@
 .util.sys.runSafe: .Q.trp[{(system x;1b)};;{-1 x,"\n",.Q.sbt[y];(x;0b)}];
 
 / aws ec2 cli commands
-.util.aws.getInstanceId: {last " " vs first system "ec2-metadata -i"};
+.util.aws.getInstanceId:{[]
+    if[not .util.isAws; :"testInst"];
+    last " " vs first system "ec2-metadata -i"
+    };
 
 .util.aws.describeInstance:{[instanceId]
     res: .util.sys.runWithRetry "aws ec2 describe-instances --filters  \"Name=instance-id,Values=",instanceId,"\"";
@@ -26,6 +31,7 @@
  };
 
 .util.aws.getGroupName:{[instanceId]
+    if[not .util.isAws; :"testAsg"];
     tags: .util.aws.describeInstance[instanceId]`Tags;
     res: first exec Value from raze[tags] where Key like "aws:autoscaling:groupName";
     if[() ~ res; 'instanceId," is not in an autoscaling group"];
@@ -49,15 +55,18 @@
  };
 
 .util.aws.scale:{[groupName]
+    if[not .util.isAws; :.util.lg "aws autoscaling set-desired-capacity --auto-scaling-group-name ",groupName," --desired-capacity  1"];
     .util.aws.setDesiredCapacity[groupName] 1 + .util.aws.getDesiredCapacity groupName;
  };
 
 .util.aws.terminate:{[instanceId]
+    if[not .util.isAws; :.util.lg "aws autoscaling terminate-instance-in-auto-scaling-group --instance-id ",instanceId," --should-decrement-desired-capacity"];
     .j.k "\n" sv .util.sys.runWithRetry "aws autoscaling terminate-instance-in-auto-scaling-group --instance-id ",instanceId," --should-decrement-desired-capacity"
  };
 
 / aws cloudwatch put-metric-data
 .util.aws.putMetricDataCW:{[namespace;dimensions;metric;unit;data]
+    if[not .util.isAws; :.util.lg "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data];
     .util.sys.runWithRetry "aws cloudwatch put-metric-data --namespace ",namespace," --dimensions ",dimensions," --metric-name ",metric," --unit ",unit," --value ",data
  };
 

@@ -19,11 +19,12 @@ sub:{subInner[x;y;.z.w]}
 /   queue  - queue the subscriber is a part of
 /   live   - time the tickerplant addd the subscriber to .u.w
 /   rolled - time the subscriber unsubscribed
-/   upds   - first and last message processed by the subscriber
-.u.asg.tab: flip `time`handle`tabs`syms`ip`queue`live`rolled`upds!();
-`.u.asg.tab upsert (0Np;0Ni;();();`;`;0Np;0Np;(0N;0N));
+/   firstI - upd count when subscriber became live
+/   lastI  - last upd subscriber processed
+.u.asg.tab: flip `time`handle`tabs`syms`ip`queue`live`rolled`firstI`lastI!();
+`.u.asg.tab upsert (0Np;0Ni;();();`;`;0Np;0Np;0N;0N);
 
-/ t - A list of tables (or \` for all).
+/ t - A list of tables (or ` for all).
 / s - Lists of symbol lists to subscribe to for the tables.
 / q - The name of the queue to be added to.
 .u.asg.sub:{[t;s;q]
@@ -39,11 +40,14 @@ sub:{subInner[x;y;.z.w]}
     if[not all missing: t in .u.t,`;
             '.Q.s1[t where not missing]," not available" ];
 
-    subIp: `$"." sv string 256 vs .z.a;
-    `.u.asg.tab upsert (.z.p; .z.w; t; s; subIp; q; 0Np; 0Np; (0N;0N));
+    `.u.asg.tab upsert (.z.p; .z.w; t; s; `$"." sv string 256 vs .z.a; q; 0Np; 0Np; 0N; 0N);
 
-    if[not count select from .u.asg.tab where not null handle, not null live, null rolled, queue = q;
-            .u.asg.add[t;s;.z.w]];
+    liveProc: select from .u.asg.tab where not null handle,
+                                           not null live,
+                                           null rolled,
+                                           queue = q;
+
+    if[not count liveProc; .u.asg.add[t;s;.z.w]];
 
     show .u.asg.tab
     show .u.w
@@ -56,13 +60,10 @@ sub:{subInner[x;y;.z.w]}
     .util.lg "Adding process on handle ",string[h]," to .u.w";
 
     schemas: raze .u.subInner[;;h] .' flip (t;s);
-
-    q: exec queue from .u.asg.tab where handle = h;
-    startI: max 0^ exec upds[;1] from .u.asg.tab where queue in q;
-
+    q: first exec queue from .u.asg.tab where handle = h;
+    startI: max 0^ exec lastI from .u.asg.tab where queue = q;
     neg[h] (`.sub.rep; schemas; .u.L; (startI; .u.i));
-
-    update live:.z.p, upds:enlist (startI;0N) from `.u.asg.tab where handle = h;
+    update live:.z.p, firstI:startI from `.u.asg.tab where handle = h;
  };
 
 / h    - handle of the RDB
@@ -70,11 +71,25 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.roll:{[h;subI]
     .util.lg "Rolling subscriber on handle ", string h;
 
-    cfg: exec from .u.asg.tab where handle = h;
-    update rolled:.z.p, upds:enlist (cfg`upds;0];subI) from `.u.asg.tab where handle = h;
     .u.del[;h] each .u.t;
-    if[count queue: select from .u.asg.tab where not null handle, null live, queue = cfg`queue;
-            .u.asg.add . first[queue]`tabs`syms`handle];
+    update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
+    q: first exec queue from .u.asg.tab where handle = h;
+    waiting: select from .u.asg.tab where not null handle,
+                                          null live,
+                                          queue = q;
+
+    if[count waiting; .u.asg.add . first[waiting]`tabs`syms`handle];
+
+    show .u.asg.tab;
+    show .u.w
+ };
+
+/ h - handle of disconnected subscriber
+.u.asg.zpc:{[h]
+    .util.lg "Process on handle ",string[h]," has disconnected";
+
+    if[not null first exec live from .u.asg.tab where handle = h; .u.asg.roll[h;0]];
+    update handle:0Ni from `.u.asg.tab where handle = h;
 
     show .u.asg.tab;
     show .u.w
@@ -86,19 +101,9 @@ sub:{subInner[x;y;.z.w]}
 
     rolled: exec handle from .u.asg.tab where not null handle, null live;
     neg[rolled] @\: (`.u.end; dt);
-    delete from `.u.asg.tab where not null rolled;
 
-    show .u.asg.tab;
-    show .u.w
- };
-
-/ h - handle of disconnected subscriber
-.u.asg.zpc:{[h]
-    .util.lg "Process on handle ",string[h]," has disconnected";
-
-    if[not null first exec live from .u.asg.tab where handle = h;
-            .u.asg.roll[h;0]];
-    update handle:0Ni from `.u.asg.tab where handle = h;
+    delete from `.u.asg.tab where (null live) or not null rolled);
+    update firstI:0 from `.u.asg.tab where not null live;
 
     show .u.asg.tab;
     show .u.w

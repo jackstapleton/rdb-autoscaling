@@ -49,13 +49,19 @@
                 ];
         :(::);
         ];
-    if[not .sub.rolled;
+    if[.sub.live;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .util.lg "Server has reached ",string[.sub.rollThreshold],"% memory usage";
                 .util.lg "Unsubscribing from the Tickerplant";
 
                 .sub.roll[];
                 ];
+        ];
+    if[.sub.scaled and not max 0, count each get each tables[];
+            .util.lg "Process has rolled and has no data left";
+            .util.lg "Terminating instance from Auto Scaling group";
+
+            .util.aws.terminate .aws.instanceId;
         ];
  };
 
@@ -64,9 +70,13 @@
     .util.lg "Unsubscribing from the Tickerplant";
 
     .sub.live: 0b;
-    .sub.rolled: 1b;
     `upd set {[x;y] (::)};
     neg[.sub.TP] @ ({.u.asg.roll[.z.w;x]}; .sub.i);
+ };
+
+.sub.end:{[dt]
+    .sub.i: 0;
+    .sub.clear dt+1;
  };
 
 / clear data from all tables from before a certain time
@@ -76,17 +86,18 @@
     .util.lg "Clearing data from before ", string tm;
 
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
-    if[.sub.rolled;
-        if[not max count each get each tables[];
-                .util.lg "Process has rolled and has no data left";
-                .util.lg "Terminating instance from Auto Scaling group";
-
-                .util.aws.terminate .aws.instanceId;
-                ];
-        ];
 
     if[.sub.live;
-        .sub.scaled:0b;
-        .Q.gc[];
-        ];
+            .sub.scaled:0b;
+            .Q.gc[];
+            :(::);
+            ];
+
+    if[not max 0, count each get each tables[];
+            .util.lg "Process has rolled and has no data left";
+            .util.lg "Terminating instance from Auto Scaling group";
+
+            .util.aws.terminate .aws.instanceId;
+            ];
+
  };

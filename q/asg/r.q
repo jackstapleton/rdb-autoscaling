@@ -16,14 +16,13 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni] ];
 
 .sub.live: 0b;      / process is the live subscriber
 .sub.scaled: 0b;    / process has launched the next server
-.sub.rolled: 0b;    / process has cut its subscription
 
 / upd counter, must keep track of upd msgs received as tickerplant
 / will use it to tell the next rdb where to start replaying from
 .sub.i: 0;
 
 / clear data at end of day
-.u.end: {[dt] .sub.clear dt+1};
+.u.end: .sub.end;
 
 / tickerplant kicks off log replay
 / so duplicate .u.asg.sub calls cannot be made at
