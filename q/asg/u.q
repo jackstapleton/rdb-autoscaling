@@ -102,7 +102,7 @@ sub:{subInner[x;y;.z.w]}
     rolled: exec handle from .u.asg.tab where not null handle, null live;
     neg[rolled] @\: (`.u.end; dt);
 
-    delete from `.u.asg.tab where (null live) or not null rolled);
+    delete from `.u.asg.tab where (null live) or not null rolled;
     update firstI:0 from `.u.asg.tab where not null live;
 
     show .u.asg.tab;
