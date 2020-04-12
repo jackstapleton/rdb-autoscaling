@@ -15,12 +15,13 @@ sub:{subInner[x;y;.z.w]}
 /   handle - handle of the subscriber
 /   tabs   - tables the subscriber has subscribed for
 /   syms   - syms the subscriber has subscribed for
+/   ip     - ip of the subscriber
 /   queue  - queue the subscriber is a part of
 /   live   - time the tickerplant addd the subscriber to .u.w
 /   rolled - time the subscriber unsubscribed
-/   lastI  - last message sent to the subscriber
-.u.asg.tab: flip `time`handle`tabs`syms`queue`live`rolled`lastI!();
-`.u.asg.tab upsert (0Np;0Ni;();();`;0Np;0Np;0N);
+/   upds   - first and last message processed by the subscriber
+.u.asg.tab: flip `time`handle`tabs`syms`ip`queue`live`rolled`upds!();
+`.u.asg.tab upsert (0Np;0Ni;();();`;`;0Np;0Np;(0N;0N));
 
 / t - A list of tables (or \` for all).
 / s - Lists of symbol lists to subscribe to for the tables.
@@ -38,9 +39,10 @@ sub:{subInner[x;y;.z.w]}
     if[not all missing: t in .u.t,`;
             '.Q.s1[t where not missing]," not available" ];
 
-    `.u.asg.tab upsert (.z.p; .z.w; t; s; q; 0Np; 0Np; 0N);
+    subIp: `$"." sv string 256 vs .z.a;
+    `.u.asg.tab upsert (.z.p; .z.w; t; s; subIp; q; 0Np; 0Np; (0N;0N));
 
-    if[not count select from .u.asg.tab where not null live, null rolled, queue = q;
+    if[not count select from .u.asg.tab where not null handle, not null live, null rolled, queue = q;
             .u.asg.add[t;s;.z.w]];
 
     show .u.asg.tab
@@ -53,13 +55,14 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.add:{[t;s;h]
     .util.lg "Adding process on handle ",string[h]," to .u.w";
 
-    update live:.z.p from `.u.asg.tab where handle = h;
     schemas: raze .u.subInner[;;h] .' flip (t;s);
 
     q: exec queue from .u.asg.tab where handle = h;
-    startI: max 0^ exec lastI from .u.asg.tab where queue in q;
+    startI: max 0^ exec upds[;1] from .u.asg.tab where queue in q;
 
     neg[h] (`.sub.rep; schemas; .u.L; (startI; .u.i));
+
+    update live:.z.p, upds:enlist (startI;0N) from `.u.asg.tab where handle = h;
  };
 
 / h    - handle of the RDB
@@ -68,9 +71,9 @@ sub:{subInner[x;y;.z.w]}
     .util.lg "Rolling subscriber on handle ", string h;
 
     cfg: exec from .u.asg.tab where handle = h;
-    update rolled:.z.p, lastI:subI from `.u.asg.tab where handle = h;
+    update rolled:.z.p, upds:enlist (cfg`upds;0];subI) from `.u.asg.tab where handle = h;
     .u.del[;h] each .u.t;
-    if[count queue: select from .u.asg.tab where null live, null rolled, queue = cfg`queue;
+    if[count queue: select from .u.asg.tab where not null handle, null live, queue = cfg`queue;
             .u.asg.add . first[queue]`tabs`syms`handle];
 
     show .u.asg.tab;
@@ -81,7 +84,7 @@ sub:{subInner[x;y;.z.w]}
     .util.lg "End of Day has occured";
     .util.lg "Sending .u.end to rolled subscribers";
 
-    rolled: exec handle from .u.asg.tab where not null handle, not null rolled;
+    rolled: exec handle from .u.asg.tab where not null handle, null live;
     neg[rolled] @\: (`.u.end; dt);
     delete from `.u.asg.tab where not null rolled;
 

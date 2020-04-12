@@ -84,4 +84,9 @@
                 .util.aws.terminate .aws.instanceId;
                 ];
         ];
+
+    if[.sub.live;
+        .sub.scaled:0b;
+        .Q.gc[];
+        ];
  };
