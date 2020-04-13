@@ -8,12 +8,12 @@
     .util.lg "Tickerplant has made process the live subscriber";
     .util.lg "Replaying ",string[tplog]," between ", .Q.s1 logWindow;
 
+    .sub.live: 1b;
     (.[;();:;].) each schemas;
     .sub.start: logWindow 0;
     `upd set .sub.replayUpd;
     -11!(logWindow 1;tplog);
     `upd set .sub.upd;
-    .sub.live: 1b;
  };
 
 / upd wrapper
@@ -52,7 +52,6 @@
     if[.sub.live;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .util.lg "Server has reached ",string[.sub.rollThreshold],"% memory usage";
-                .util.lg "Unsubscribing from the Tickerplant";
 
                 .sub.roll[];
                 ];
