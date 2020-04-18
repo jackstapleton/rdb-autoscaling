@@ -97,12 +97,13 @@ sub:{subInner[x;y;.z.w]}
 
 .u.asg.end:{[dt]
     .util.lg "End of Day has occured";
-    .util.lg "Sending .u.end to rolled subscribers";
+    .util.lg "Sending .u.end to non live subscribers";
 
-    rolled: exec handle from .u.asg.tab where not null handle, null live;
-    neg[rolled] @\: (`.u.end; dt);
+    notLive: exec handle from .u.asg.tab where not null handle,
+                                        (null live) or not any null (live;rolled);
+    neg[notLive] @\: (`.u.end; dt);
 
-    delete from `.u.asg.tab where (null live) or not null rolled;
+    delete from `.u.asg.tab where any (null handle; null live; not null rolled);
     update firstI:0 from `.u.asg.tab where not null live;
 
     show .u.asg.tab;
