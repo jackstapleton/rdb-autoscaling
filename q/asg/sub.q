@@ -5,6 +5,7 @@
 / tplog     - file path of the tickerplant log
 / logWindow - start and end of the window needed in the log, (start;end)
 .sub.rep:{[schemas;tplog;logWindow]
+    .sub.live: 1b;
     (.[;();:;].) each schemas;
     .sub.start: logWindow 0;
     `upd set .sub.replayUpd;
@@ -12,7 +13,6 @@
     `upd set .sub.upd;
     .z.ts: .sub.monitorMemory;
     system "t 5000";
-    .sub.live: 1b;
  };
 
 / upd wrapper
@@ -29,7 +29,7 @@
 
 / regular upd function
 / must keep track of upd message count
-.sub.upd: {.sub.i+: 1; x upsert y };
+.sub.upd: {.sub.i+: 1; x upsert y; };
 
 / monitor server memory
 / check if a new server needs to be launched
@@ -43,7 +43,7 @@
                 ];
         :(::);
         ];
-    if[not .sub.rolled;
+    if[.sub.live;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .sub.roll[];
                 ];
@@ -53,19 +53,25 @@
 / send tickerplant last upd message processed and unsubscribe
 .sub.roll:{[]
     .sub.live: 0b;
-    .sub.rolled: 1b;
     `upd set {[x;y] (::)};
-    .sub.TP ({.u.asg.roll[.z.w;x]}; .sub.i);
+    neg[.sub.TP] @ ({.u.asg.roll[.z.w;x]}; .sub.i);
+ };
+
+.sub.end:{[dt]
+    .sub.i: 0;
+    .sub.clear dt+1;
  };
 
 / clear data from all tables from before a certain time
-/ terminate the the server if no data is left and the process has cut its subscription
+/ terminate the the server if no data is left and the process is not live
 / tm - clear all data from all tables before this time
 .sub.clear:{[tm]
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
-    if[.sub.rolled;
-        if[not max count each get each tables[];
-                .util.aws.terminate .aws.instanceId;
-                ];
-        ];
+    if[.sub.live;
+            .sub.scaled:0b;
+            .Q.gc[];
+            :(::);
+            ];
+    if[not max 0, count each get each tables[];
+            .util.aws.terminate .aws.instanceId];
  };

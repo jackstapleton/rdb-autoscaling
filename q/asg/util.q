@@ -1,16 +1,19 @@
 // asg/util.q
 
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' system "free") except\: enlist ""};
-.util.getMemUsage:{100 * 1 - (%) . .util.free[][`Mem;`free`total]};
+.util.getMemUsage:{100 * (%) . .util.free[][`Mem;`used`total]};
 
 / aws cli commands should be wrapped in a retry loop as they may timeout when aws is under load
 .util.sys.runWithRetry:{[cmd]
     n: 0;
-    while[not last res:.util.sys.runSafe cmd; if[10 < n+: 1; 'res 0] ];
+    while[not last res:.util.sys.runSafe cmd;
+            system "sleep 1";
+            if[10 < n+: 1; 'res 0];
+            ];
     res 0
  };
 
-.util.sys.runSafe: @[{(system x;1b)};;{(x;0b)}];
+.util.sys.runSafe: .Q.trp[{(system x;1b)};;{-1 x,"\n",.Q.sbt[y];(x;0b)}];
 
 / aws ec2 cli commands
 .util.aws.getInstanceId: {last " " vs first system "ec2-metadata -i"};
@@ -64,4 +67,48 @@
 
 .util.aws.putMemoryUsageCW:{[instanceId;groupName;memory]
     .util.aws.putMetricDataCW["RdbCluster";"InstanceId=",instanceId,",AutoScalingGroup=",groupName;"MemoryUsage";"Percent";string memory];
+ };
+
+.util.aws.putUpdCountCW:{[instanceId;groupName;i]
+    .util.aws.putMetricDataCW["RdbCluster";"AutoScalingGroup=",groupName;"UpdMessages";"Count";string i];
+ };
+
+/ logging functions
+.util.const.ip: "." sv string `int$ 0x0 vs .z.a;
+.util.tmp.hbTime: .z.p;
+.util.tmp.subTime: .z.p;
+.util.tmp.metricTime: .z.p;
+.util.tmp.asgTime: .z.p;
+
+.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;x);};
+.util.string: {$[not type x; .z.s each x; 10h = abs type x; x; string x]};
+
+.util.hb:{[]
+    if[not .z.p > .util.tmp.hbTime + 00:00:30; :(::)];
+    .util.lg "HEARTBEAT";
+    .util.tmp.hbTime: .z.p;
+ };
+
+.util.putSubMetricsCW:{[]
+    if[not .z.p > .util.tmp.metricTime + 00:02; :(::)];
+    mem: .util.free[]`Mem;
+    .util.aws.putUsedMemoryCW mem`used;
+    perc:100 * 1 - (%) . mem`free`total;
+    .util.aws.putMemoryPercentCW perc;
+    if[.sub.live; .util.aws.putUpdCountCW[instanceId;groupName;.sub.i]];
+    .util.lg "Percentage memory usage of server at - ",string[perc],"%";
+    .util.tmp.metricTime: .z.p;
+ };
+
+.util.lgSubInfo:{[]
+    if[not .z.p > .util.tmp.subTime + 00:05; :(::)];
+    .util.lg ".sub.i = ", string .sub.i;
+    .util.tmp.subTime: .z.p;
+ };
+
+.util.lgAsgInfo:{[]
+    if[not .z.p > .util.tmp.asgTime + 00:05; :(::)];
+    .util.lg ".u.i = ", string .u.i;
+    show .u.asg.tab;
+    .util.tmp.asgTime: .z.p;
  };

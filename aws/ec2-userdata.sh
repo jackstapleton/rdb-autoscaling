@@ -35,5 +35,12 @@ echo "" >> ${USERHOME}/.bash_profile
 source /opt/rdb-autoscaling/aws/ec2-utils.sh
 ec2_mount_efs $EFS /mnt/efs
 
+# add time to ec2 instance name
+NAME=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID Name)
+ASG=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID aws:autoscaling:groupName)
+NUM=$(sudo -i -u ec2-user asg_get_desired_capacity $ASG)
+NEWNAME=${NAME}-${NUM}-$(sudo -i -u ec2-user date +%Y%m%dD%H%M%S)
+sudo -i -u $KDBUSER aws ec2 create-tags --resources $INSTANCEID --tags Key=Name,Value=$NEWNAME
+
 # start app
 sudo -i -u $KDBUSER /opt/rdb-autoscaling/bin/startq --app $APP --log-dir /mnt/efs/logs

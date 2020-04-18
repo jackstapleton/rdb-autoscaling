@@ -90,56 +90,10 @@ Resources:
             !FindInMap [ Constants, UserData, Bootstrap ]
       LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-tick-asg-launch-template'
 
-  GatewayASG:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ TickASG ]
-    Properties:
-      Cooldown: 300
-      DesiredCapacity: 0
-      HealthCheckGracePeriod: 60
-      HealthCheckType: EC2
-      LaunchTemplate:
-        LaunchTemplateId: !Ref GatewayLaunchTemplate
-        Version: 1
-      MaxSize: 10
-      MinSize: 0
-      Tags:
-        - Key: APP
-          PropagateAtLaunch: True
-          Value: gw-asg
-        - Key: EFS
-          PropagateAtLaunch: True
-          Value: !GetAtt EfsMountTarget.IpAddress
-      VPCZoneIdentifier:
-        - !Ref SUBNETID
-
-  GatewayLaunchTemplate:
-    Type: 'AWS::EC2::LaunchTemplate'
-    Properties:
-      LaunchTemplateData:
-        BlockDeviceMappings:
-            - DeviceName: /dev/xvda
-              Ebs:
-                VolumeSize: 8
-        IamInstanceProfile:
-          Arn: !Ref IAMINSTANCEPROFILE
-        ImageId: !Ref AMI
-        InstanceType: t2.small
-        KeyName: !Ref SSHKEY
-        SecurityGroupIds: !Ref SECURITYGROUPIDS
-        TagSpecifications:
-          - ResourceType: instance
-            Tags:
-            - Key: Name
-              Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}.gw-asg'
-        UserData:
-          Fn::Base64:
-            !FindInMap [ Constants, UserData, Bootstrap ]
-      LaunchTemplateName: !Sub '${AWS::Region}-${AWS::StackName}-gw-asg-launch-template'
 
   RdbASG:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
-    DependsOn: [ GatewayASG ]
+    DependsOn: [ TickASG ]
     Properties:
       Cooldown: 300
       DesiredCapacity: 1
@@ -148,7 +102,7 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref RdbLaunchTemplate
         Version: 1
-      MaxSize: 5
+      MaxSize: 50
       MinSize: 0
       Tags:
         - Key: APP
