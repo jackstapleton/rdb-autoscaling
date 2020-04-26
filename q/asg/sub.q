@@ -37,7 +37,6 @@
 .sub.monitorMemory:{[]
     if[not .sub.scaled;
         if[.util.getMemUsage[] > .sub.scaleThreshold;
-                -1 "Scaling ", .aws.groupName;
                 .util.aws.scale .aws.groupName;
                 .sub.scaled: 1b;
                 ];

@@ -25,7 +25,7 @@ sub:{subInner[x;y;.z.w]}
 `.u.asg.tab upsert (0Np;0Ni;();();`;0Np;0Np;0N);
 
 / t - A list of tables (or ` for all).
-/ s - Lists of symbol lists to subscribe to for the tables.
+/ s - Lists of symbol lists for each of the tables.
 / q - The name of the queue to be added to.
 .u.asg.sub:{[t;s;q]
     if[-11h = type t;
@@ -76,12 +76,11 @@ sub:{subInner[x;y;.z.w]}
  };
 
 / send .u.end to all non live subs with a handle
-/ clear all but live procs from .u.asg.tab
+/ clear all disconnected procs from .u.asg.tab
 / mark all firstI and as zero
 .u.asg.end:{[]
-    notLive: exec handle from .u.asg.tab where not null handle,
-                                        (null live) or not any null (live;rolled);
+    delete from `.u.asg.tab where null handle;
+    notLive: exec handle from .u.asg.tab where (null live) or not any null (live;rolled);
     neg[notLive] @\: (`.u.end; dt);
-    delete from `.u.asg.tab where any (null handle; null live; not null rolled);
     update firstI:0 from `.u.asg.tab where not null live;
  };
