@@ -997,15 +997,48 @@ To reduce the likelihood of this occurring it may be worth increasing the scale 
 
 #### Threshold Windows
 
+TODO
+
+### Taking it Further
+
+#### Turning the Cluster Off
+
+The saving estimates in the previous sections could be taken a step further with Scheduled Scaling.
+For instance when the RDBs are not in use we could scale the cluster down to zero effectively turning off the RDB.
+Saturdays and Sundays are a prime example of when this could be useful, but it could also be extended to after end of day.
+
+If data only starts coming into to the RDB at around 07:00 when markets open there is no point having a server up.
+So we could schedule the RDBs to turn down to zero at end of day, we then have a few options on when to scale back out.
+
+- Schedule the ASG to scale out at 06:30 just before market opens.
+    * Data will not be available until then if it starts to come in before.
+- Monitor the Tickerplant for the first message, and scale out when it is received.
+    * Data will not be available until the RDB comes up and recovers from the Tickerplant log.
+    * Will not be much data to recover.
+- Scale out when the first query is ran.
+    * Useful because data is not needed until it is queried.
+    * RDBs may come up before there is any data.
+    * Large amount of data may need to be recovered if queries start to come in later in the day.
+
+#### Intra-day Write-down
+
+The least complex way to run this solution would be in tandem with a Write-down Database (WDB) process.
+The RDBs will not have to save down to disk at end of day, so scaling in will be quicker and more importantly complexity will be greatly reduced.
+If they were to write down at end of day a separate process would be need to coordinate the writes of all the RDBs and then sort and part the data.
+
+An Elastic File System would also be needed for multiple servers to write to the same place.
+This may cause issues on AWS in particular as its EFS uses burst credits to for read and write throughput.
+These are accumulated over time but may be exhausted if all of the day's data is written to disk in a short period of time.
+Provisioned throughput could be used but it can be quite expensive.
+
+As the cluster will be deployed alongside a WDB process an intra-day write-down solution could also be incorporated.
+If we were to right down to disk every hour, we could also scale in the number of RDBs in the cluster every hour by calling `.sub.clear` with the intra-day write time.
+
+Options for how to set this up have been discussed in a previous Whitepaper by Colm McCarthy, [Intraday writedown solutions](https://code.kx.com/v2/wp/intraday-writedown).
 
 ## Conclusion
 
-Run through the pros and cons of the solution in the paper.
-Give examples of how to take the solution further.
-Table, sym sharding etc.
-More granular autoscaling.
-Writing down intraday.
-
+TODO
 
 ## Appendix
 
