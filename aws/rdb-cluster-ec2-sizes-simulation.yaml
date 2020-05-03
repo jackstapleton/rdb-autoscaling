@@ -10,7 +10,6 @@ Metadata:
       - Label:
           default: "Real-time Database Cluster Configuration"
         Parameters:
-          - RDBINSTANCETYPE
           - SCALETHRESHOLD
           - ROLLTHRESHOLD
       - Label:
@@ -26,8 +25,6 @@ Metadata:
         default: "SSH Key"
       TICKINSTANCETYPE:
         default: "Tickerplant Instance Type"
-      RDBINSTANCETYPE:
-        default: "RDB Instance Type"
       SCALETHRESHOLD:
         default: "Scale Threshold"
       ROLLTHRESHOLD:
@@ -48,10 +45,6 @@ Parameters:
     Type: String
     ConstraintDescription: "Must be a valid EC2 Instance Type"
     Description: "Choose the Tickerplant's EC2 Instance Type"
-  RDBINSTANCETYPE:
-    Type: String
-    ConstraintDescription: "Must be a valid EC2 Instance Type"
-    Description: "Choose the RDB Cluster's EC2 Instance Type"
   SCALETHRESHOLD:
     Type: Number
     Description: "Choose the Memory Utilisation Percentage to scale up the Cluster"
@@ -224,11 +217,11 @@ Resources:
       VPCZoneIdentifier:
         - !Ref SUBNETID
 
-  RdbASG:
+  RdbASGSmall:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     DependsOn: [ TickASG ]
     Properties:
-      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg'
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg-small'
       Cooldown: 300
       DesiredCapacity: 1
       HealthCheckGracePeriod: 60
@@ -241,7 +234,7 @@ Resources:
             LaunchTemplateId: !Ref EC2LaunchTemplate
             Version: 1
           Overrides:
-            - InstanceType: !Ref RDBINSTANCETYPE
+            - InstanceType: t3a.small
       Tags:
         - Key: APP
           PropagateAtLaunch: True
@@ -251,7 +244,7 @@ Resources:
           Value: !GetAtt EfsMountTarget.IpAddress
         - Key: Name
           PropagateAtLaunch: True
-          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg'
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg-small'
         - Key: SCALETHRESHOLD
           PropagateAtLaunch: True
           Value: !Ref SCALETHRESHOLD
@@ -260,3 +253,117 @@ Resources:
           Value: !Ref ROLLTHRESHOLD
       VPCZoneIdentifier:
         - !Ref SUBNETID
+
+  RdbASGMedium:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg-medium'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: t3a.medium
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg-medium'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref SCALETHRESHOLD
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref ROLLTHRESHOLD
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  RdbASGLarge:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg-large'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: t3a.large
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg-large'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref SCALETHRESHOLD
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref ROLLTHRESHOLD
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  RdbASGXLarge:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg-xlarge'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: t3a.xlarge
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg-xlarge'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref SCALETHRESHOLD
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref ROLLTHRESHOLD
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+
+

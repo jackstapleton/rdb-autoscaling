@@ -12,7 +12,6 @@ Metadata:
         Parameters:
           - RDBINSTANCETYPE
           - SCALETHRESHOLD
-          - ROLLTHRESHOLD
       - Label:
           default: "General Configuration"
         Parameters:
@@ -30,8 +29,6 @@ Metadata:
         default: "RDB Instance Type"
       SCALETHRESHOLD:
         default: "Scale Threshold"
-      ROLLTHRESHOLD:
-        default: "Roll Threshold"
       SUBNETID:
         default: "Subnet Id"
       VPCID:
@@ -55,11 +52,6 @@ Parameters:
   SCALETHRESHOLD:
     Type: Number
     Description: "Choose the Memory Utilisation Percentage to scale up the Cluster"
-    MinValue: 0
-    MaxValue: 100
-  ROLLTHRESHOLD:
-    Type: Number
-    Description: "Choose the Max Memory Utilisation Percentage for each RDB in the Cluster"
     MinValue: 0
     MaxValue: 100
   SUBNETID:
@@ -224,7 +216,7 @@ Resources:
       VPCZoneIdentifier:
         - !Ref SUBNETID
 
-  RdbASG:
+  RdbASG20:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     DependsOn: [ TickASG ]
     Properties:
@@ -254,9 +246,120 @@ Resources:
           Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg'
         - Key: SCALETHRESHOLD
           PropagateAtLaunch: True
-          Value: !Ref SCALETHRESHOLD
+          Value: 20
         - Key: ROLLTHRESHOLD
           PropagateAtLaunch: True
-          Value: !Ref ROLLTHRESHOLD
+          Value: 85
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+    RdbASG40:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: !Ref RDBINSTANCETYPE
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: 40
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: 85
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+    RdbASG60:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: !Ref RDBINSTANCETYPE
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: 60
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: 85
+      VPCZoneIdentifier:
+        - !Ref SUBNETID
+
+  RdbASG80:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: [ TickASG ]
+    Properties:
+      AutoScalingGroupName: !Sub '${AWS::Region}.ec2-asg.${AWS::StackName}-r-asg'
+      Cooldown: 300
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 60
+      HealthCheckType: EC2
+      MaxSize: 50
+      MinSize: 0
+      MixedInstancesPolicy:
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref EC2LaunchTemplate
+            Version: 1
+          Overrides:
+            - InstanceType: !Ref RDBINSTANCETYPE
+      Tags:
+        - Key: APP
+          PropagateAtLaunch: True
+          Value: r-asg
+        - Key: EFS
+          PropagateAtLaunch: True
+          Value: !GetAtt EfsMountTarget.IpAddress
+        - Key: Name
+          PropagateAtLaunch: True
+          Value: !Sub '${AWS::Region}.ec2-instance.${AWS::StackName}-r-asg'
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: 80
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: 85
       VPCZoneIdentifier:
         - !Ref SUBNETID
