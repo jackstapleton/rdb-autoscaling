@@ -43,6 +43,7 @@ case "$app" in
         ;;
     r-asg )
         nohup q asg/r.q $TPHOST:5010 -p 5015 > $log_file 2>&1 &
+        nohup q asg/mon.q > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
         ;;
 esac
 
