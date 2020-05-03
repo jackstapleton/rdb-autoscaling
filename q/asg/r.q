@@ -42,3 +42,4 @@ neg[.sub.TP] @ (`.u.asg.sub; `; `; `$ .aws.groupName, ".r-asg");
             ];
  };
 system "t 200";
+system "c 200 2000";
