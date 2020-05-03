@@ -39,13 +39,4 @@ case "$app" in
     r-asg )
         q asg/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 -e 1
         ;;
-    w )
-        q tick/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
-        ;;
-    w-asg )
-        q asg/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 -e 1
-        ;;
-    gw-asg )
-        q asg/gw.q $TPHOST:5010 $GWHOST:5012 -p 5012 -c 30 200 -e 1
-        ;;
 esac

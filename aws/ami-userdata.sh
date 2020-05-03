@@ -21,6 +21,13 @@ source ${USERHOME}/.bash_profile
 sudo -i -u ec2-user conda install kdb -c kx -y
 sudo -i -u ec2-user git clone https://github.com/jackstapleton/rdb-autoscaling.git /opt/rdb-autoscaling
 
+# use develop code
+cd /opt/rdb-autoscaling
+git pull
+git fetch
+git checkout develop
+cd
+
 # set up dev env
 sudo -i -u ec2-user git clone https://github.com/jackstapleton/environments-setup.git ${USERHOME}/environments-setup
 sudo -i -u ec2-user ${USERHOME}/environments-setup/dot-files/util/vim-install.sh

@@ -33,28 +33,19 @@ cd $q_dir
 
 case "$app" in
     tick )
-        nohup q tick.q sym $tplog_dir -p 5010 -c 30 200 > $log_file 2>&1 &
+        nohup q tick.q sym $tplog_dir -p 5010 > $log_file 2>&1 &
         ;;
     tick-asg )
-        nohup q tickasg.q sym $tplog_dir -p 5010 -c 30 200 > $log_file 2>&1 &
-        nohup q asg/feed.q :5010 -p 5011 -c 30 200 > ${log_dir}/feed.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
+        nohup q tickasg.q sym $tplog_dir -p 5010 > $log_file 2>&1 &
+        nohup q asg/feed.q :5010 -p 5011 > ${log_dir}/feed.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
         ;;
     r )
-        nohup q tick/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 -c 30 200 > $log_file 2>&1 &
-        nohup q asg/mon.q sym -p 5011 -c 30 200 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
+        nohup q tick/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 > $log_file 2>&1 &
+        nohup q asg/mon.q sym -p 5011 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
         ;;
     r-asg )
-        nohup q asg/r.q $TPHOST:5010 -p 5015 -c 30 200 > $log_file 2>&1 &
-        nohup q asg/mon.q sym -p 5011 -c 30 200 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
-        ;;
-    w )
-        nohup q tick/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 > $log_file 2>&1 &
-        ;;
-    w-asg )
-        nohup q asg/w.q $TPHOST:5010 $GWHOST:5012 -p 5016 -c 30 200 > $log_file 2>&1 &
-        ;;
-    gw-asg )
-        nohup q asg/gw.q $TPHOST:5010 -p 5012 -c 30 200 > $log_file 2>&1 &
+        nohup q asg/r.q $TPHOST:5010 -p 5015 > $log_file 2>&1 &
+        nohup q asg/mon.q sym -p 5011 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
         ;;
 esac
 
