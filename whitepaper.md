@@ -1522,8 +1522,3 @@ def terminate_instance_from_asg(instance_id):
     return res
 ```
 
-
-
-# tmp
-
-
