@@ -1,0 +1,36 @@
+{
+    "metrics": [
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-20\" MetricName=\"MemoryTotal\"', 'Average', 300 )", "label": "t3a.medium.20.MemoryTotal", "id": "e1", "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-40\" MetricName=\"MemoryTotal\"', 'Average', 300 )", "label": "t3a.medium.40.MemoryTotal", "id": "e2", "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-60\" MetricName=\"MemoryTotal\"', 'Average', 300 )", "label": "t3a.medium.60.MemoryTotal", "id": "e3", "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-80\" MetricName=\"MemoryTotal\"', 'Average', 300 )", "label": "t3a.medium.80.MemoryTotal", "id": "e4", "region": "eu-west-1" } ],
+        [ { "expression": "SUM([e1])", "label": "t3a.medium.20.MemoryTotal.SUM", "id": "e5", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e2])", "label": "t3a.medium.40.MemoryTotal.SUM", "id": "e6", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e3])", "label": "t3a.medium.60.MemoryTotal.SUM", "id": "e7", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e4])", "label": "t3a.medium.80.MemoryTotal.SUM", "id": "e8", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-20\" MetricName=\"MemoryUsed\"', 'Average', 300 )", "label": "t3a.medium.20.MemoryUsed", "id": "e9",  "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-40\" MetricName=\"MemoryUsed\"', 'Average', 300 )", "label": "t3a.medium.40.MemoryUsed", "id": "e10", "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-60\" MetricName=\"MemoryUsed\"', 'Average', 300 )", "label": "t3a.medium.60.MemoryUsed", "id": "e11", "region": "eu-west-1" } ],
+        [ { "expression": "SEARCH('Namespace=\"RdbCluster\" AutoScalingGroup=\"eu-west-1.ec2-asg.rdb-cluster-v1-r-asg-80\" MetricName=\"MemoryUsed\"', 'Average', 300 )", "label": "t3a.medium.80.MemoryUsed", "id": "e12", "region": "eu-west-1" } ],
+        [ { "expression": "SUM([e9])",  "label": "t3a.medium.20.MemoryUsed.SUM", "id": "e13", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e10])", "label": "t3a.medium.40.MemoryUsed.SUM", "id": "e14", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e11])", "label": "t3a.medium.60.MemoryUsed.SUM", "id": "e15", "region": "eu-west-1", "period": 300 } ],
+        [ { "expression": "SUM([e12])", "label": "t3a.medium.80.MemoryUsed.SUM", "id": "e16", "region": "eu-west-1", "period": 300 } ]
+    ],
+    "view": "timeSeries",
+    "stacked": false,
+    "region": "eu-west-1",
+    "stat": "Average",
+    "period": 300,
+    "yAxis": {
+        "left": {
+            "min": 0,
+            "label": "Memory (Bytes)",
+            "showUnits": true
+        }
+    },
+    "title": "RDB Memory Usage",
+    "legend": {
+        "position": "right"
+    }
+}
