@@ -9,7 +9,7 @@ The big cloud platforms like Amazon Web Services, Google Cloud, and Microsoft Az
 The Infrastructure-as-a-Service (IaaS) model they have adopted means it is easier than ever before to provision computing resources.
 
 This model has been taken a step further with Auto Scaling technologies.
-Servers, storage and networking resources can now be commissioned and decommissioned in an instant.
+Servers, storage, and networking resources can now be commissioned and decommissioned in an instant.
 Customers can leverage this new technology to scale their infrastructure in order to meet system demands without manual intervention.
 This elasticity is one of the key benefits of Cloud Computing.
 Systems can be scaled up quickly to meet demand without the complicated and time-consuming processes usually involved when provisioning new physical resources.
@@ -94,7 +94,6 @@ As you can see the price is largely proportional to the memory capacity of each 
 
 Most importantly, replacing the one large server with a scalable cluster will make our system more reliable.
 With Auto Scaling technologies we can stop guessing our capacity needs.
-
 By dynamically acquiring resources we can ensure that the load on our system never exceeds its capacity.
 This will safeguard against unexpected spikes in data volumes crippling our systems.
 
@@ -107,7 +106,7 @@ Even if the estimate turns out to be correct, we will still end up provisioning 
 Demand varies and so should our capacity.
 
 Distributing the day's data among multiple smaller servers will also increase the system's resiliency.
-One fault will no longer mean all of the day's data is lost. 
+One fault will no longer mean all of the day's data is lost.
 The smaller RDBs will also be quicker to recover from a fault as they will only have to replay a portion of the tickerplant's log.
 
 
@@ -126,7 +125,7 @@ An AMI is a template that Amazon's Elastic Compute Cloud (EC2) uses to start ins
 Creating one with our code and software means we can provision multiple EC2 instances with identical software, this will ensure consistency across our stack.
 
 To do this a regular EC2 instance was launched using Amazon's Linux 2 AMI, kdb+ was installed and our code was deployed.
-The Amazon command-line Interface (CLI) was then used to create an image of the server.
+The Amazon command-line interface (CLI) was then used to create an image of the server.
 
 ```bash
 aws ec2 create-image --instance-id i-1234567890abcdef --name kdb-rdb-autoscaling-ami-v1
@@ -180,8 +179,8 @@ There are a number of ways an ASG can scale its instances on AWS:
 - Predictive
     * Machine learning is used to predict demand.
 - Dynamic
-    * Cloudwatch Metrics are monitored to follow the flow of demand.
-    * e.g. CPU and Memory Usage.
+    * Cloudwatch metrics are monitored to follow the flow of demand.
+    * e.g. CPU and memory uSage.
 - Manual
     * Adjusting the ASG's `DesiredCapacity` attribute.
     * Can be done through the console or the AWS CLI.
@@ -368,7 +367,7 @@ kdb+tick's functionality will then take over and start publishing to the new RDB
 
 ### Adding subscribers
 
-To be added to `.u.asg.tab` a subscriber must call `.u.asg.sub` which takes three parameters:
+To be added to `.u.asg.tab` a subscriber must call `.u.asg.sub`, it takes three parameters:
 
 1. A list of tables to subscribe for.
 2. A list of symbol lists to subscribe for (corresponding to the list of tables).
@@ -433,7 +432,7 @@ q).u.asg.tab
 time                          handle tabs syms ip        queue                                          live                          rolled firstI lastI
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 2020.04.13D23:36:43.518172000 7                10.0.1.5  rdb-cluster-v1-RdbASGMicro-NWN25W2UPGWQ.r-asg  2020.04.13D23:36:43.518223000        0
-2020.04.14D07:37:42.451523000 9                10.0.1.22 rdb-cluster-v1-RdbASGMicro-NWN25W2UPGWQ.r-asg 
+2020.04.14D07:37:42.451523000 9                10.0.1.22 rdb-cluster-v1-RdbASGMicro-NWN25W2UPGWQ.r-asg
 q).u.w
 Quote| 7i `
 Trade| 7i `
@@ -647,7 +646,7 @@ time                          handle tabs syms ip         queue                 
 2020.04.14D16:59:10.663224000 15               10.0.1.119 rdb-cluster-v1-RdbASGMicro-NWN25W2UPGWQ.r-asg
 ```
 
-Usually when end of day occurs `.u.end` is called in the tickerplant.
+Usually when end-of-day occurs `.u.end` is called in the tickerplant.
 It informs the RDB and the data will then be written to disk and flushed from memory.
 In our case when we do this the **rolled** RDBs will be sitting idle with no data.
 
@@ -770,7 +769,7 @@ The main change is needed because `.z.w` cannot be used in `.u.sub` or `.u.add` 
 When there is a queue of RDBs `.u.sub` will not be called in the RDB's initial subscription call, so `.z.w` will not be the handle of the RDB we want to start publishing to.
 To remedy this `.u.add` has been changed to take a handle as a third parameter instead of using `.z.w`.
 
-The same change could not be made to `.u.sub` as it is the entry function for kdb+ticks `tick/r.q`.
+The same change could not be made to `.u.sub` as it is the entry function for kdb+tick's `tick/r.q`.
 To keep `tick/r.q` working `.u.subInner` has been added, it is a copy of `.u.sub` but takes a handle as a third parameter.
 `.u.sub` is now a projection of `.u.subInner`, it passes `.z.w` in as the third parameter.
 
@@ -932,7 +931,6 @@ So for this simulation the cluster had a 22-minute cushion.
 With a one minute lead time, the data volumes would have to increase to 22 times that of the mock feed before the cluster starts to fall behind.
 
 So we could probably afford to reduce this time by narrowing the gap between scaling and rolling, but it may not be worth it.
-
 Falling behind the tickerplant will mean recovering data from its log.
 This issue will be a compounding one as each subsequent server that comes up will be farther and farther behind the tickerplant.
 More and more data will need to be recovered, and live data will be delayed.
@@ -975,7 +973,7 @@ Strangely the capacity of the `t3a.small` cluster, the smallest instance, rose a
 Intuitively they should scale together but the smaller steps of the `t3a.small` cluster should still have kept it below the others.
 When the memory usage of each server is plotted we see that the smaller instances once again rose above the larger ones.
 
-| ![T3a Sizes Memory Usage](ref/img/SimSizesMemoryUsage.png) |  
+| ![T3a Sizes Memory Usage](ref/img/SimSizesMemoryUsage.png) |
 |---|
 | Figure 3.4: t3a Clusters' Memory Usage - Cloudwatch Metrics |
 
@@ -1019,7 +1017,7 @@ However it is worth noting that the larger servers did have more capacity when t
 
 The three clusters here behave as expected.
 The smallest cluster's capacity, although it does move towards the larger ones as more instances are added to the cluster, stays far closer to the demand line.
-This is the worst-case scenario for the `t3a.xlarge` cluster, as 16GBs means it has to scale up to safely meet the demand of the simulation's data, but the second server stays mostly empty until end of day.
+This is the worst-case scenario for the `t3a.xlarge` cluster, as 16GBs means it has to scale up to safely meet the demand of the simulation's data, but the second server stays mostly empty until end-of-day.
 The cluster will still have major savings over a `t3.2xlarge` with 32GB.
 
 Taking a look at Figure 3.5 we can intuitively split the day into three stages:
