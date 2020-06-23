@@ -129,7 +129,7 @@ Once available the AMI was used along with Cloudformation to deploy a stack.
 
 ### Cloudformation
 
-AWS Cloudformation allows users to provision resources usinga `JSON` or `YAML` file.
+AWS Cloudformation allows users to provision resources using a `JSON` or `YAML` file.
 The resources needed for our stack are outlined below.
 
 - AWS Elastic File System (EFS).
@@ -186,7 +186,7 @@ Examples of how to use these can be found in [Appendix 3](#3-cloudwatch-metric-c
 
 #### Manual scaling
 
-Another way to scale the instances in an ASG, and the method more suitable for our use case, is to manually adjust the ASG's `DeciredCapacity`.
+Another way to scale the instances in an ASG, and the method more suitable for our use case, is to manually adjust the ASG's `DesiredCapacity`.
 This can be done via the AWS console or the AWS CLI.
 
 As it can be done using the CLI we can program the RDBs to scale the cluster in and out.
@@ -204,8 +204,8 @@ As with publishing Cloudwatch metrics, adjusting the `DesiredCapacity` can be do
 
 #### Auto Scaling in q
 
-As the AWS CLI simply uses unix commands we can run them in `q` using the `system` command.
-By default the CLI will return `json` we can then parse the output using `.j.k`.
+As the AWS CLI simply uses Unix commands we can run them in `q` using the `system` command.
+By default the CLI will return `json` and we can then parse the output using `.j.k`.
 It will be useful to wrap the `aws` system commands in a retry loop as they may timeout when AWS is under load.
 
 ```q
@@ -267,7 +267,7 @@ The ASG will then automatically launch a server.
  };
 ```
 
-To scale in the RDB will terminate its own server.
+To scale in, the RDB will terminate its own server.
 When doing this it must make an `aws autoscaling` call, the ASG will then know not to launch a new instance in its place.
 
 ```q
@@ -283,7 +283,7 @@ When doing this it must make an `aws autoscaling` call, the ASG will then know n
 
 ### Overview
 
-Instead of one large instance, our RDB will now be a cluster of smaller instances the day's real-time data distributed between them.
+Instead of one large instance, our RDB will now be a cluster of smaller instances and the day's real-time data will be distributed between them.
 An Auto Scaling group will be used to maintain the RAM capacity of the cluster.
 Throughout the day more data will be ingested by the tickerplant and added to the cluster.
 The ASG will increase the number of instances in the cluster throughout the day in order to hold this new data.
