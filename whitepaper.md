@@ -32,10 +32,12 @@ There are three main types of computing resources that we can look to scale:
 * Compute
 * Random-access memory (RAM)
 
-Scaling storage for our kdb+ databases can be relatively simple in the cloud as the size or the number of storage volumes can just be increased as the database grows.
+Scaling storage for our kdb+ databases can be relatively simple in the cloud.
+As the database grows we can provision extra storage volumes for our instances, or increase the size of the ones currently in use.
+
 Alternatively an elastic file system could be used.
-Amazon EFS is one example, it essentially gives unlimited storage capacity.
-Cost-wise you only pay for what you use and the file system's throughput scales up as you write more data.
+Amazon EFS is one example, it is a network file system (NFS) fully managed by AWS.
+As files are added to EFS AWS will automatically scale the size and throughput of the file system so you will only pay for what you use.
 
 Reading and writing data are prime use cases for scaling compute power within a kdb+ application.
 Scaling compute for reading has been covered by Rebecca Kelly in her blog post [Kx in the Public Cloud: Autoscaling using kdb+](https://kx.com/blog/kx-in-the-public-cloud-auto-scaling-using-kdb).
@@ -1119,7 +1121,10 @@ Highly important data can be placed in a cluster with a low scale threshold or l
 If certain data sources do not need to be available with a low latency clusters with smaller instances and higher scale thresholds can be used to reduce costs.
 
 ## Author
-TODO
+
+Jack Stapleton is a kdb+ consultant for Kx who has worked for some the world’s largest financial institutions.
+Based in Dublin, Jack is currently working on the design, development and maintenance of a range of kdb+ solutions in the cloud for a leading financial institution.
+
 
 ## Appendix
 
