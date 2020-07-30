@@ -835,15 +835,18 @@ To determine how much cost savings our cluster of RDBs can make we will deploy a
 
 First we just want to see the cluster in action so we can see how it behaves.
 To do this we will run the cluster with `t3a.micro` instances.
-These are only 1GB in size so we should see the cluster scaling out quite quickly.
 
-The market will not generate data evenly throughout the day in the hypothetical example we used in the [Auto Scaling Section](#auto-scaling) above.
-Generally the data volumes will be highly concentrated while the markets are open and quite sparse otherwise.
-To simulate this as closely as possible we will generate data in volumes with the distribution below.
+In the [Auto Scaling the RDB](#auto-scaling-the-rdb) section above, data is distributed evenly throughout the day.
+This will not be the case in most of our systems as data volumes will generally be highly concentrated between market open and close.
+To simulate this as closely as possible we will generate data following the distribution below.
 
 | ![Data Volume Distribution](ref/img/SimDataVolumes.png) |
 |---|
 | Figure 2.1: Simulation Data Volume Distribution |
+
+In this simulation we will aim to send in 6GB of data of mock trade and quote data.
+The peak data volume will be almost 1GB of data per hour (15% of the daily data) .
+The `t3a.micro` instances only have 1GB of RAM so we should see the cluster scaling out quite quickly while markets are open.
 
 The behavior of the cluster was monitored using Cloudwatch metrics.
 Each RDB server published the results of the Linux `free` command.
@@ -933,7 +936,7 @@ These clusters all had used different instance types with capacities of 2, 4, 8,
 |---|
 | Figure 3.1: t3a Instance Types Used for Cost Efficiency Comparison |
 
-As in the first simulation, data volumes were distributed in the pattern shown in Figure 2.1 in order to simulate a day in the markets.
+As in the first simulation the data was distributed in the pattern shown in Figure 2.1 in order to simulate a day in the markets.
 However, in this simulation we aimed to send in around 16GB of data to match the total capacity of one `t3a.xlarge` (the largest instance type of the clusters).
 `.sub.i` was published from each of the live RDBs allowing us to plot the `upd` message throughput.
 
@@ -1103,7 +1106,17 @@ If we were to write down to disk every hour, we could also scale in the number o
 
 Options for how to set up an intra-day write-down solution have been discussed in a previous whitepaper by Colm McCarthy, [Intraday writedown solutions](https://code.kx.com/v2/wp/intraday-writedown).
 
+#### Querying Distributed RDBs
 
+This solution has one obvious difference to a regular kdb+ system in that there are multiple RDB servers.
+User queries will need to be parsed and routed to each one to ensure the data can be retrieved effectively.
+Engineering a solution for this is beyond the scope of this paper, but it may be tackled in the future.
+
+Once a gateway process is set up distributed RDBs could offer some advantages over a regular RDB:
+
+- RDBs can be filtered out by the gateway pre-query based on which data sets they are holding.
+- Each RDB will be holding a fraction of the day's data, decreasing query memory and duration.
+- Queries across multiple RDBs can be done in parallel.
 
 ## Conclusion
 
