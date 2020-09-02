@@ -527,20 +527,40 @@ Finally the RDB sets `.z.ts` to `.sub.monitorMemory` and initializes the timer t
 
 ### Monitoring RDB server memory
 
-The RDB monitors the memory of its server for two reasons.
+The RDB server's memory is monitored for two reasons.
 
-1. To tell the Auto Scaling group to scale up.
-2. To unsubscribe from the tickerplant when it is full.
+1. To tell the Auto Scaling group to scale out.
+2. To unsubscribe from the tickerplant when full.
+
+#### Scaling out
+
+AWS CLI commands can take some time to run.
+This could create some buffering in the RDB if it were to run any commands while it is subscribed to the tickerplant.
+
+To avoid this a monitor process runs separately on the server to coordinate the scale out.
+It will continuously run `.mon.monitorMemory` to check the server's memory usage against `.mon.scaleThreshold`.
+If the threshold is breached it will increment the Auto Scaling group's `DesiredCapacity` and set `.sub.scaled` to be true.
+This will ensure the monitor process does not tell the Auto Scaling group to scale out again.
 
 ```q
-.sub.monitorMemory:{[]
-    if[not .sub.scaled;
-        if[.util.getMemUsage[] > .sub.scaleThreshold;
+.mon.monitorMemory:{[]
+    if[not .mon.scaled;
+        if[.util.getMemUsage[] > .mon.scaleThreshold;
                 .util.aws.scale .aws.groupName;
-                .sub.scaled: 1b;
+                .mon.scaled: 1b;
                 ];
         :(::);
         ];
+ };
+```
+
+#### Unsubscribing
+
+The RDB process runs its own timer function to determine when to unsubscribe from the tickerplant.
+It will do this to stop the server from running out of memory.
+
+```q
+.sub.monitorMemory:{[]
     if[.sub.live;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .sub.roll[];
@@ -549,18 +569,12 @@ The RDB monitors the memory of its server for two reasons.
  };
 ```
 
-`.sub.monitorMemory` compares the percentage memory usage of the server against two thresholds.
-These thresholds are set to two different global variables.
+`.sub.monitorMemory` checks when the server's memory usage breaches the `.sub.rollThreshold`.
+It then calls `.sub.roll` on the tickerplant which will make it roll to the next subscriber.
 
-* `.sub.scaleThreshold`
-* `.sub.rollThreshold`
+#### Thresholds
 
-When percentage memory usage rises above `.sub.scaleThreshold` the RDB will increment the Auto Scaling group's `DesiredCapacity`.
-It will also set `.sub.scaled` to be true to ensure the RDB does not scale the Auto Scaling group again.
-
-When `.sub.rollThreshold` is hit the RDB will call `.sub.roll` on the tickerplant to make the tickerplant roll to the next subscriber.
-
-Ideally `.sub.scaleThreshold` and `.sub.rollThreshold` will be set far enough apart so that the new RDB has time to come up before `.sub.rollThreshold` is reached.
+Ideally `.mon.scaleThreshold` and `.sub.rollThreshold` will be set far enough apart so that the new RDB has time to come up before `.sub.rollThreshold` is reached.
 This will prevent the cluster from falling behind the tickerplant and reduce the number of `upd` messages that will need to be recovered from the log.
 
 
@@ -660,7 +674,7 @@ time                          handle tabs syms ip         queue                 
 ```
 
 When `.u.end` is called on the RDB it will delete the previous day's data from each table.
-If the process is live it will mark `.sub.scaled` to false so that it can scale out again when it refills.
+If the process is live it will mark `.mon.scaled` to false on the monitor process so that it can scale out again when it refills.
 
 If the RDB is not live and it has flushed all of its data it will terminate its own instance and reduce the `DesiredCapacity` of the ASG by one.
 
@@ -676,8 +690,8 @@ If the RDB is not live and it has flushed all of its data it will terminate its 
 .sub.clear:{[tm]
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
     if[.sub.live;
-            .sub.scaled:0b;
             .Q.gc[];
+            neg[.sub.MON] (set;`.mon.scaled;0b);
             :(::);
             ];
     if[not max 0, count each get each tables[];
@@ -797,6 +811,8 @@ system "l asg/sub.q"
 
 while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni]];
 
+while[null .sub.MON: @[{hopen (`::5016; 5000)}; (::); 0Ni]];
+
 .aws.instanceId: .util.aws.getInstanceId[];
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];
 
@@ -804,7 +820,6 @@ while[null .sub.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni]];
 .sub.rollThreshold: getenv `ROLLTHRESHOLD;
 
 .sub.live: 0b;
-.sub.scaled: 0b;
 
 .sub.i: 0;
 

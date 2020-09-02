@@ -32,16 +32,8 @@
 .sub.upd: {.sub.i+: 1; x upsert y; };
 
 / monitor server memory
-/ check if a new server needs to be launched
-/ then check if the process needs to unsubscribe
+/ check if the process needs to unsubscribe
 .sub.monitorMemory:{[]
-    if[not .sub.scaled;
-        if[.util.getMemUsage[] > .sub.scaleThreshold;
-                .util.aws.scale .aws.groupName;
-                .sub.scaled: 1b;
-                ];
-        :(::);
-        ];
     if[.sub.live;
         if[.util.getMemUsage[] > .sub.rollThreshold;
                 .sub.roll[];
@@ -67,8 +59,8 @@
 .sub.clear:{[tm]
     ![;enlist(<;`time;tm);0b;`$()] each tables[];
     if[.sub.live;
-            .sub.scaled:0b;
             .Q.gc[];
+            neg[.sub.MON] (set;`.mon.scaled;0b);
             :(::);
             ];
     if[not max 0, count each get each tables[];
