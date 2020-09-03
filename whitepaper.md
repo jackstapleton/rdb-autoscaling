@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Cloud computing has fast become the new normal as more and more organisations are migrating their IT systems to the cloud.
+Cloud computing has fast become the new normal as more and more organizations are migrating their IT systems to the cloud.
 The big cloud platforms like Amazon Web Services, Google Cloud, and Microsoft Azure have made it reliable, secure, and most importantly cost-effective.
 The Infrastructure-as-a-Service (IaaS) model they have adopted has made it easier than ever before to provision computing resources.
 Systems can now be scaled up quickly to meet demand without the complicated and time-consuming processes usually involved when provisioning new physical resources.
