@@ -3,9 +3,9 @@
 
 ## Introduction
 
-Cloud computing has fast become the new normal as more and more companies are migrating their IT systems to the cloud.
+Cloud computing has fast become the new normal as more and more organisations are migrating their IT systems to the cloud.
 The big cloud platforms like Amazon Web Services, Google Cloud, and Microsoft Azure have made it reliable, secure, and most importantly cost-effective.
-The Infrastructure-as-a-Service (IaaS) model they have adopted has made it is easier than ever before to provision computing resources.
+The Infrastructure-as-a-Service (IaaS) model they have adopted has made it easier than ever before to provision computing resources.
 Systems can now be scaled up quickly to meet demand without the complicated and time-consuming processes usually involved when provisioning new physical resources.
 
 This model has been taken a step further with Auto Scaling technologies.
@@ -14,7 +14,7 @@ This elasticity is one of the key benefits of Cloud Computing.
 Customers can leverage this new technology to scale their infrastructure in order to meet system demands without manual intervention.
 
 As these technologies become more prevalent it will become important to start incorporating them into kdb+.
-In this paper we will explore how we can do this, in particular focusing on scaling the random access memory (RAM) needed for the real-time database (RDB).
+In this paper we will explore how we can do this while focusing on scaling the random access memory (RAM) needed for the real-time database (RDB).
 
 
 ## Auto Scaling
@@ -37,19 +37,19 @@ As the database grows we can provision extra storage volumes for our instances, 
 
 Alternatively an elastic file system could be used.
 Amazon EFS is one example, it is a network file system (NFS) fully managed by AWS.
-As files are added to EFS AWS will automatically scale the size and throughput of the file system so you will only pay for what you use.
+As files are added to EFS AWS will automatically scale the size and throughput of the file system.
 
 Reading and writing data are prime use cases for scaling compute power within a kdb+ application.
 Scaling compute for reading has been covered by Rebecca Kelly in her blog post [Kx in the Public Cloud: Autoscaling using kdb+](https://kx.com/blog/kx-in-the-public-cloud-auto-scaling-using-kdb).
 Here Rebecca demonstrates how to scale the number of historical database (HDB) servers to handle an increasing or decreasing number of queries.
 
 Dynamically scaling the compute needed for writing can be a bit more complicated.
-Given we want to maintain the data's order, the entire stream of data for a given source must all go through one point in the system to be timestamped.
+Given we want to maintain the data's order, the entire stream of data for a given source must go through one point in the system to be timestamped.
 
 The same can be said for scaling the RAM needed for an RDB.
 For this use case the number of RDB servers will be increased throughout the day as more and more data is ingested by the tickerplant.
 The system must ensure that the data is not duplicated across these servers.
-Building a solution for this issue will be the objective of this paper.
+Building a solution for this problem will be the objective of this paper.
 
 
 ### Auto Scaling the RDB
@@ -58,7 +58,7 @@ By Auto Scaling the RDB we will improve both the cost-efficiency and the availab
 
 #### Why use Auto Scaling
 
-Let's say on average we will receive 12GB of data evenly throughout the day.
+Let's say on average we receive a total of 12GB of data which is distributed evenly throughout the day.
 For a regular kdb+ system we might provision one server with 16GB of RAM to allow for some contingency capacity.
 We then hope that the data volumes do not exceed that 16GB limit on a daily basis.
 
@@ -73,7 +73,7 @@ The RAM needed to hold real-time data in memory will grow throughout the day, an
 
 In the cloud *you pay only for what you use*.
 In a perfect system there should be no spare computing resources running idle accumulating costs.
-We should be able to scale down in times of low demand like weekends when markets are closed or end-of-day when the day's data has been flushed from memory.
+So in periods of low demand like weekends or end-of-day (when the day's data has been flushed from memory) we should have the ability to scale down.
 By ensuring this we can maintain the performance of a system at the lowest possible cost.
 
 | ![Cost Savings](ref/img/ExampleASGCostEfficiency.png) |
@@ -93,7 +93,7 @@ As you can see the price is largely proportional to the memory capacity of each 
 
 #### Availability
 
-Replacing the one large server with a scalable cluster will make our system more reliable.
+Replacing one large server with a scalable cluster will make our system more reliable.
 By dynamically acquiring resources we can ensure that the load on our system never exceeds its capacity.
 This will safeguard against unexpected spikes in data volumes crippling our systems and we can stop guessing our capacity needs.
 
@@ -120,25 +120,25 @@ They should all be transferable to the other big cloud platforms like Microsoft 
 
 ### Amazon Machine Image (AMI)
 
-As multiple servers will be launched, all needing kdb+ and the code to scale the RDBs, an Amazon Machine Image was needed.
+Instead of launching separate servers and installing our code on each one, it is best practice to create one Amazon Machine Image (AMI) and launch all of our servers from it.
 An AMI is a template that Amazon's Elastic Compute Cloud (EC2) uses to start instances.
-Creating one with our code and software means we can provision multiple EC2 instances with identical software, this will ensure consistency across our stack.
+Using one will allow us to keep the software and code consistent across the instances in our system.
 
-To do this a regular EC2 instance was launched using Amazon's Linux 2 AMI, kdb+ was installed , the code was deployed, and image was taken.
+To create our AMI a regular EC2 instance was launched using Amazon's Linux 2 AMI, kdb+ was installed, our code was deployed, and an image of the instance was taken.
 An example script of how to do this can be found in [Appendix 1](#1-ami-user-data-script).
 Once available the AMI was used along with Cloudformation to deploy a stack.
 
 
 ### Cloudformation
 
-AWS Cloudformation allows users to provision resources using a `JSON` or `YAML` file.
+AWS Cloudformation will allow us to easily deploy and manage our system's resources with a `JSON` or `YAML` file.
 The resources needed for our stack are outlined below.
 
 - AWS Elastic File System (EFS).
 - EC2 launch templates.
 - Auto Scaling groups.
 
-An example `YAML` file to deploy this Stack can be found in [Appendix 2](#2-cloudformation-template).
+An example `YAML` file to deploy this stack can be found in [Appendix 2](#2-cloudformation-template).
 
 
 #### AWS Elastic File System (EFS)
@@ -149,7 +149,7 @@ Without a common file system the RDB would not be able to replay the tickerplant
 
 #### EC2 launch template
 
-On AWS, launch templates can be used to configure details for an EC2 instance ahead of time (e.g. instance type, root volume size, AMI id).
+We will use launch templates to configure details for EC2 instances ahead of time (e.g. instance type, root volume size, AMI id).
 Our Auto Scaling groups will use these templates to launch their servers.
 
 
@@ -295,7 +295,7 @@ At the end of the day, the day's data will be flushed from memory and the ASG wi
 #### kdb+tick
 
 The code in this paper has been written to act as a wrapper around [kdb+tick's](https://github.com/KxSystems/kdb-tick) `.u` functionality.
-The code to coordinate the RDBs is in the `.u.asg` namespace, its functions determine when to call `.u.sub` and `.u.del` in order to add and remove the subscriber from `.u.w`.
+The code to coordinate the RDBs is in the `.u.asg` namespace, its functions determine when to call `.u.sub` and `.u.del` to add and remove subscribers from `.u.w`.
 
 
 ### Scaling the cluster
@@ -489,10 +489,11 @@ In kdb+tick `.u.i` will be sent to the RDB.
 The RDB will then replay that many `upd` messages from the log.
 As it replays it inserts every row of data in the `upd` messages into the tables.
 
-We do not want to keep all of the data in the log as other RDBs in the cluster may be holding some of it.
+In our case we may not want to keep all of the data in the log as other RDBs in the cluster may be holding some of it.
 This is why the `logWindow` is passed down by the tickerplant.
 
 `logWindow` is a list of two integers.
+
 1. The last `upd` message processed by the other RDBs in the same queue.
 2. The last `upd` processed by the tickerplant, `.u.i`.
 
@@ -534,11 +535,11 @@ The RDB server's memory is monitored for two reasons.
 
 #### Scaling out
 
-AWS CLI commands can take some time to run.
-This could create some buffering in the RDB if it were to run any commands while it is subscribed to the tickerplant.
+As discussed in the [Auto Scaling in q](#auto-scaling-in-q) section, AWS CLI commands can take some time to run.
+This could create some unwanted buffering in the RDB if it were to run them while subscribed to the tickerplant.
 
-To avoid this a monitor process runs separately on the server to coordinate the scale out.
-It will continuously run `.mon.monitorMemory` to check the server's memory usage against `.mon.scaleThreshold`.
+To avoid this another q process runs separately on the server to coordinate the scale out.
+It will continuously run `.mon.monitorMemory` to check the server's memory usage against a scale threshold, say 60%.
 If the threshold is breached it will increment the Auto Scaling group's `DesiredCapacity` and set `.sub.scaled` to be true.
 This will ensure the monitor process does not tell the Auto Scaling group to scale out again.
 
