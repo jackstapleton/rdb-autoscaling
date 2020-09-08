@@ -4,14 +4,13 @@
 ## Introduction
 
 Cloud computing has fast become the new normal as more and more organizations are migrating their IT systems to the cloud.
-The big cloud platforms like Amazon Web Services, Google Cloud, and Microsoft Azure have made it reliable, secure, and most importantly cost-effective.
-The Infrastructure-as-a-Service (IaaS) model they have adopted has made it easier than ever before to provision computing resources.
-Systems can now be scaled up quickly to meet demand without the complicated and time-consuming processes usually involved when provisioning new physical resources.
+Big cloud platforms like Amazon Web Services, Google Cloud, and Microsoft Azure have made it reliable, secure, and most importantly cost-effective.
 
+The Infrastructure-as-a-Service (IaaS) model they have adopted has made it easier than ever before to provision computing resources.
 This model has been taken a step further with Auto Scaling technologies.
-Servers, storage, and networking resources can now be commissioned and decommissioned in an instant.
+Servers, storage, and networking resources can now be commissioned and decommissioned in an instant without any manual intervention.
 This elasticity is one of the key benefits of Cloud Computing.
-Customers can leverage this new technology to scale their infrastructure in order to meet system demands without manual intervention.
+Customers can leverage this new technology to scale their infrastructure in order to meet system demands.
 
 As these technologies become more prevalent it will become important to start incorporating them into kdb+.
 In this paper we will explore how we can do this while focusing on scaling the random access memory (RAM) needed for the real-time database (RDB).
@@ -26,7 +25,7 @@ Instead we can use clusters of smaller resources and scale them in and out to fo
 
 ### Auto Scaling and kdb+
 
-There are three main types of computing resources that we can look to scale:
+When it comes to databases there are three main types of computing resources that we can look to scale:
 
 * Storage
 * Compute
@@ -63,7 +62,7 @@ For a regular kdb+ system we might provision one server with 16GB of RAM to allo
 We then hope that the data volumes do not exceed that 16GB limit on a daily basis.
 
 In a scalable cluster we can begin the day with one small server (for this example a quarter of the size, 4GB).
-The RAM needed to hold real-time data in memory will grow throughout the day, and we can then step up our capacity by launching more servers.
+The RAM needed to hold real-time data in memory will grow throughout the day, as it does we can step up our capacity by launching more servers.
 
 | ![Large RDB Server](ref/img/ExampleCapacityComp.png) |
 |---|
@@ -72,8 +71,8 @@ The RAM needed to hold real-time data in memory will grow throughout the day, an
 #### Cost efficiency
 
 In the cloud *you pay only for what you use*.
-In a perfect system there should be no spare computing resources running idle accumulating costs.
-So in periods of low demand like weekends or end-of-day (when the day's data has been flushed from memory) we should have the ability to scale down.
+So in a perfect system there should be no spare computing resources running idle accumulating costs.
+In periods of low demand like weekends or end-of-day (when the day's data has been flushed from memory) we should have the ability to scale down.
 By ensuring this we can maintain the performance of a system at the lowest possible cost.
 
 | ![Cost Savings](ref/img/ExampleASGCostEfficiency.png) |
@@ -95,12 +94,12 @@ As you can see the price is largely proportional to the memory capacity of each 
 
 Replacing one large server with a scalable cluster will make our system more reliable.
 By dynamically acquiring resources we can ensure that the load on our system never exceeds its capacity.
-This will safeguard against unexpected spikes in data volumes crippling our systems and we can stop guessing our capacity needs.
 
 | ![ASG Availability](ref/img/ExampleASGAvailability.png) |
 |---|
 | Figure 1.4: Availablity of a Scalable RDB under High Load |
 
+This will safeguard against unexpected spikes in data volumes crippling our systems and we can stop guessing our capacity needs.
 When developing a new application there is no need to estimate how much memory the RDB is going to need throughout its lifetime.
 Even if the estimate turns out to be correct, we will still end up provisioning resources that will lie mostly idle during periods of low demand.
 Demand varies and so should our capacity.
@@ -113,25 +112,24 @@ The smaller RDBs will also be quicker to recover from a fault as they will only 
 
 ## Amazon Web Services (AWS)
 
-Amazon Web Services (AWS) was used to develop and deploy the solution outlined in this paper.
-The AWS resources that were needed are described in this section.
-They should all be transferable to the other big cloud platforms like Microsoft Azure and Google Cloud.
+The solution described in this paper was developed and deployed on Amazon Web Services (AWS).
+In this section the AWS resources that were used are described, each of which should be transferable to the other big cloud platforms like Microsoft Azure and Google Cloud.
 
 
 ### Amazon Machine Image (AMI)
 
-Instead of launching separate servers and installing our code on each one, it is best practice to create one Amazon Machine Image (AMI) and launch all of our servers from it.
-An AMI is a template that Amazon's Elastic Compute Cloud (EC2) uses to start instances.
-Using one will allow us to keep the software and code consistent across the instances in our system.
+In the solution multiple servers are launched, all needing the same code and software packages installed in order to run our kdb+ system.
+Instead of launching the servers and then installing the needed software on each one, it is best practice to do it on one server, create an Amazon Machine Image (AMI) of that server and then use that image to launch all of the servers.
+This will keep the software and code consistent across the deployment.
 
-To create our AMI a regular EC2 instance was launched using Amazon's Linux 2 AMI, kdb+ was installed, our code was deployed, and an image of the instance was taken.
+To create our AMI a regular EC2 instance was launched using Amazon's Linux 2 AMI, kdb+ was installed, our code was deployed and an image of the instance was taken.
 An example script of how to do this can be found in [Appendix 1](#1-ami-user-data-script).
-Once available the AMI was used along with Cloudformation to deploy a stack.
+Once available this AMI was used along with Cloudformation to deploy a stack.
 
 
 ### Cloudformation
 
-AWS Cloudformation will allow us to easily deploy and manage our system's resources with a `JSON` or `YAML` file.
+Using AWS Cloudformation means we can easily deploy and manage our system's resources with a `JSON` or `YAML` file.
 The resources needed for our stack are outlined below.
 
 - AWS Elastic File System (EFS).
@@ -140,23 +138,20 @@ The resources needed for our stack are outlined below.
 
 An example `YAML` file to deploy this stack can be found in [Appendix 2](#2-cloudformation-template).
 
-
 #### AWS Elastic File System (EFS)
 
-EFS is a network file system (NFS) which any EC2 instance can mount.
-This solves the first problem we will face when putting the tickerplant and RDB on different servers.
-Without a common file system the RDB would not be able to replay the tickerplant's log file to recover.
+We will want the RDB to be on a different server than the tickerplant but both processes will need access to the tickerplant's logs.
+Writing the logs to EFS (a network file system) will mean the RDBs will be able to read the files as the tickerplant is writing them.
 
 #### EC2 launch template
 
 We will use launch templates to configure details for EC2 instances ahead of time (e.g. instance type, root volume size, AMI id).
-Our Auto Scaling groups will use these templates to launch their servers.
+Our Auto Scaling groups will then use these templates to launch their servers.
 
 
 ### Auto Scaling group (ASG)
 
 AWS EC2 Auto Scaling groups (ASG) can be used to maintain a given number of EC2 instances in a cluster.
-If any of the instances in the clusters become unhealthy the ASG will terminate them and launch new ones in their place, maintaining the overall compute capacity of the group.
 
 ##### Recovery
 
@@ -180,7 +175,7 @@ There are a number of ways an ASG can scale its instances on AWS:
 
 #### Dynamic Scaling
 
-We could conceivably publish Cloudwatch metrics for memory usage from our RDBs and allow AWS to manage scaling out.
+We could conceivably publish memory usage statistics as Cloudwatch metrics from our RDBs and allow AWS to manage scaling out.
 If the memory across the cluster rises to a certain point the ASG will increment its `DesiredCapacity` attribute and launch a new server.
 
 Sending custom Cloudwatch metrics is relatively simple using either python's boto3 library or the AWS CLI.
@@ -194,11 +189,10 @@ This can be done via the AWS console or the AWS CLI.
 As it can be done using the CLI we can program the RDBs to scale the cluster in and out.
 Managing the Auto Scaling within the application is preferable because we want to be specific when scaling in.
 
-To scale in, AWS will choose which instance to terminate based on certain criteria (e.g. instance count per availability zone, time to the next next billing hour).
-You are able to replace the default behavior with other options like `OldestInstance` and `NewestInstance`.
+If scaling in was left up to AWS it would choose which instance to terminate based on certain criteria (e.g. instance count per availability zone, time to the next next billing hour).
 However, if all of the criteria have been evaluated and there are still multiple instances to choose from, AWS will pick one at random.
 
-Under no circumstance do we want AWS to terminate an instance running an RDB process which is still holding today's data.
+Under no circumstance do we want AWS to terminate an instance running an RDB process which is still holding live data.
 So we will need to keep control of the Auto Scaling group's `DesiredCapacity` within the application.
 
 As with publishing Cloudwatch metrics, adjusting the `DesiredCapacity` can be done with python's boto3 library or the AWS CLI.
@@ -207,7 +201,7 @@ As with publishing Cloudwatch metrics, adjusting the `DesiredCapacity` can be do
 #### Auto Scaling in q
 
 As the AWS CLI simply uses Unix commands we can run them in `q` using the `system` command.
-By default the CLI will return `json` and we can then parse the output using `.j.k`.
+By default the CLI will return `json` so we can parse the result using `.j.k`.
 It will be useful to wrap the `aws` system commands in a retry loop as they may timeout when AWS is under load.
 
 ```q
@@ -295,7 +289,7 @@ At the end of the day, the day's data will be flushed from memory and the ASG wi
 #### kdb+tick
 
 The code in this paper has been written to act as a wrapper around [kdb+tick's](https://github.com/KxSystems/kdb-tick) `.u` functionality.
-The code to coordinate the RDBs is in the `.u.asg` namespace, its functions determine when to call `.u.sub` and `.u.del` to add and remove subscribers from `.u.w`.
+The code to coordinate the RDBs has been put in a new `.u.asg` namespace, its functions determine when to call `.u.sub` and `.u.del` to add and remove subscribers from `.u.w`.
 
 
 ### Scaling the cluster
@@ -394,7 +388,7 @@ So multiple subscriptions can still be made.
  };
 ```
 
-`.u.asg.sub` first makes some checks on the arguments.
+`.u.asg.sub` first carries out some checks on the arguments.
 
 - Ensures `t` and `s` are enlisted.
 - Checks that the count of `t` and `s` match.
@@ -454,7 +448,6 @@ This function is equivalent to kdb+tick's `.u.sub` but it takes a handle as a th
 This change to `.u` will be discussed in a later section.
 
 The tickerplant then calls `.sub.rep` on the RDB and the schemas, log file, and the log window are passed down as parameters.
-The log window is the gap between the last `upd` processed by the RDB's queue and `.u.i`, the current `upd` message.
 
 Once the replay is kicked off on the RDB it is marked as the **live** subscriber in `.u.asg.tab`.
 
@@ -464,7 +457,7 @@ Once the replay is kicked off on the RDB it is marked as the **live** subscriber
 When the tickerplant makes an RDB the **live** subscriber it will call `.sub.rep` to initialize it.
 
 ```q
-/ schemas   - table names and schemas of subscription tables
+/ schemas   - table names and corresponding schemas
 / tplog     - file path of the tickerplant log
 / logWindow - start and end of the window needed in the log, (start;end)
 
@@ -536,7 +529,7 @@ The RDB server's memory is monitored for two reasons.
 #### Scaling out
 
 As discussed in the [Auto Scaling in q](#auto-scaling-in-q) section, AWS CLI commands can take some time to run.
-This could create some unwanted buffering in the RDB if it were to run them while subscribed to the tickerplant.
+This could create some unwanted buffering in the RDB if they were to run while subscribed to the tickerplant.
 
 To avoid this another q process runs separately on the server to coordinate the scale out.
 It will continuously run `.mon.monitorMemory` to check the server's memory usage against a scale threshold, say 60%.
@@ -550,7 +543,6 @@ This will ensure the monitor process does not tell the Auto Scaling group to sca
                 .util.aws.scale .aws.groupName;
                 .mon.scaled: 1b;
                 ];
-        :(::);
         ];
  };
 ```
@@ -571,12 +563,12 @@ It will do this to stop the server from running out of memory.
 ```
 
 `.sub.monitorMemory` checks when the server's memory usage breaches the `.sub.rollThreshold`.
-It then calls `.sub.roll` on the tickerplant which will make it roll to the next subscriber.
+It then calls `.sub.roll` on the tickerplant which will then roll to the next subscriber.
 
 #### Thresholds
 
-Ideally `.mon.scaleThreshold` and `.sub.rollThreshold` will be set far enough apart so that the new RDB has time to come up before `.sub.rollThreshold` is reached.
-This will prevent the cluster from falling behind the tickerplant and reduce the number of `upd` messages that will need to be recovered from the log.
+Ideally `.mon.scaleThreshold` and `.sub.rollThreshold` will be set far enough apart so that the new RDB has time to come up before the tickerplant tries to roll to the next subscriber.
+This will prevent the cluster from falling behind and reduce the number of `upd` messages that will need to be recovered from the log.
 
 
 ### Rolling subscribers
@@ -657,7 +649,7 @@ To scale in `.u.asg.end` is called alongside kdb+tick's `.u.end`.
 ```q
 .u.asg.end:{[]
     notLive: exec handle from .u.asg.tab where not null handle,
-                                        (null live) or not any null (live;rolled);
+                                               (null live) or not any null (live;rolled);
     neg[notLive] @\: (`.u.end; dt);
     delete from `.u.asg.tab where any (null handle; null live; not null rolled);
     update firstI:0 from `.u.asg.tab where not null live;
@@ -703,7 +695,7 @@ If the RDB is not live and it has flushed all of its data it will terminate its 
 
 ### Bringing it all together
 
-The q scripts for the code outlined above are laid out in the same way as kdb+tick i.e. the script to run the tickerplant, `tickasg.q`, is in the top directory with the `.u` and RDB code in a directory below, `asg/`.
+The q scripts for the code outlined above are laid out in the same way as kdb+tick, i.e. `tickasg.q` is in the top directory with the RDB and `.u.asg` scripts in the directory below, `asg/`.
 
 The code runs alongside kdb+tick so its scripts are placed in the same top directory.
 
@@ -747,7 +739,7 @@ system "l asg/u.q"
 `tickasg.q` starts by loading in `tick.q`, `.u.tick` is called in this file so the tickerplant is started.
 Loading in `asg/u.q` will initiate the `.u.asg` code on top of it.
 
-`.z.pc` and `.u.end` are then overwritten to use both the `.u` and `.u.asg` versions.
+`.z.pc` and `.u.end` are then overwritten to run both the `.u` and the `.u.asg` versions.
 
 ```q
 .u.asg.zpc:{[h]
@@ -817,7 +809,6 @@ while[null .sub.MON: @[{hopen (`::5016; 5000)}; (::); 0Ni]];
 .aws.instanceId: .util.aws.getInstanceId[];
 .aws.groupName: .util.aws.getGroupName[.aws.instanceId];
 
-.sub.scaleThreshold: getenv `SCALETHRESHOLD;
 .sub.rollThreshold: getenv `ROLLTHRESHOLD;
 
 .sub.live: 0b;
@@ -835,7 +826,6 @@ The script then sets the global variables outlined below.
 
 - `.aws.instanceId` - instance id of its EC2 instance.
 - `.aws.groupName` - name of its Auto Scaling group.
-- `.sub.scaleThreshold` - memory percentage threshold to scale out.
 - `.sub.rollThreshold` - memory percentage threshold to unsubscribe.
 - `.sub.live` - whether tickerplant is currently it sending data.
 - `.sub.scaled` - whether it has launched a new instance.
@@ -845,7 +835,7 @@ The script then sets the global variables outlined below.
 
 ## Cost/Risk analysis
 
-To determine how much cost savings our cluster of RDBs can make we will deploy and simulate a day in the market.
+To determine how much cost savings our cluster of RDBs can make we will deploy the stack and simulate a day in the market.
 
 ### Initial simulation
 
@@ -853,7 +843,7 @@ First we just want to see the cluster in action so we can see how it behaves.
 To do this we will run the cluster with `t3a.micro` instances.
 
 In the [Auto Scaling the RDB](#auto-scaling-the-rdb) section above, data is distributed evenly throughout the day.
-This will not be the case in most of our systems as data volumes will generally be highly concentrated between market open and close.
+This will not be the case in most of our systems as data volumes will be highly concentrated between market open and close.
 To simulate this as closely as possible we will generate data following the distribution below.
 
 | ![Data Volume Distribution](ref/img/SimDataVolumes.png) |
@@ -904,7 +894,8 @@ To do that we can take a look at the capacity of the cluster versus its memory u
 | Figure 2.5: t3a.micro Cluster's Total Memory Capacity vs Total Memory Usage - Cloudwatch Metrics |
 
 We can see from the graph above that the cluster's capacity follows the demand line quite closely.
-To reduce costs further we need to bring it even closer.
+As we pay per GB of RAM we use, the capacity line can be taken as the cost of the cluster.
+The gap between it and the usage line is where the cluster can make savings.
 
 Our first option is to reduce the size of each step up in capacity by reducing the size of our cluster's servers.
 To bring the step itself closer to the demand line we need to either scale the server as late as possible or have each RDB hold more data.
@@ -917,8 +908,8 @@ To summarise there are three factors we can adjust in our cluster.
 
 #### Risk analysis
 
-Care will be needed when adjusting these factors for cost-efficiency as each one will increase the margin for error.
-First a roll threshold should be chosen so that the risk of losing an RDB to a `'wsfull` error is minimized.
+Care will be needed when adjusting these factors for cost-efficiency as each one will increase the risk of failure.
+First and foremost a roll threshold should be chosen so that the chance of losing an RDB to a `'wsfull` error is minimized.
 
 The main risk associated with scaling comes from not being able to scale out fast enough.
 This will occur if the lead time for an RDB server is greater than the time it takes for the live server to roll after it has told the ASG to scale out.
@@ -938,21 +929,21 @@ This issue will be a compounding one as each subsequent server that comes up wil
 More and more data will need to be recovered, and live data will be delayed.
 
 One of the mantras of Auto Scaling is to *"stop guessing demand"*.
-Keeping a cushion for the RDBs in the tickerplant's queue we will likely not have to worry about large spikes in demand affecting our system.
+By keeping a cushion for the RDBs in the tickerplant's queue we will likely not have to worry about large spikes in demand affecting our system.
 
 Further simulations will be run to determine whether cost savings associated with adjusting these factors are worth the risk.
 
 
 ### Server size comparison
 
-To determine the impact of using smaller instances four clusters were launched each with a different instance types.
-These clusters all had used different instance types with capacities of 2, 4, 8, and 16GB.
+To determine the impact of using smaller instances four clusters were launched each with a different instance type.
+The instances used had capacities of 2, 4, 8, and 16GB.
 
 | ![T3a Sizes Instance Types](ref/img/SimSizesInstanceTypes.png) |
 |---|
 | Figure 3.1: t3a Instance Types Used for Cost Efficiency Comparison |
 
-As in the first simulation the data was distributed in the pattern shown in Figure 2.1 in order to simulate a day in the markets.
+As in the first simulation the data volumes were distributed in order to simulate a day in the market.
 However, in this simulation we aimed to send in around 16GB of data to match the total capacity of one `t3a.xlarge` (the largest instance type of the clusters).
 `.sub.i` was published from each of the live RDBs allowing us to plot the `upd` message throughput.
 
@@ -987,11 +978,17 @@ Swap:             0           0           0
 
 So for every instance that we add to the cluster, the overall memory usage will increase by 150MB.
 This extra 150MB will be negligible when the data volumes are scaled up as much larger servers will be used.
-The difference is less prominent in the 4, 8, and 16GB servers in this simulation, so going forward we will use them to compare costs.
+
+The effect is less prominent in the 4, 8, and 16GB servers so going forward we will use them to compare costs.
 
 | ![T3a Sizes Total Memory1](ref/img/SimSizesTotalMemory1.png) |
 |---|
 | Figure 3.5: Larger t3a Clusters' Memory Usage - Cloudwatch Metrics |
+
+The three clusters here behave as expected.
+The smallest cluster's capacity stays far closer to the demand line, although it does move towards the larger ones as more instances are added.
+This is the worst-case scenario for the `t3a.xlarge` cluster, as 16GBs means it has to scale up to safely meet the demand of the simulation's data, but the second server stays mostly empty until end-of-day.
+The cluster will still have major savings over a `t3.2xlarge` with 32GB.
 
 The cost of running each cluster was calculated, the results are shown below.
 We can see that the two smaller instances have significant savings compared to the larger ones.
@@ -1013,17 +1010,12 @@ The clusters with larger instances saw just 35 and 38%.
 If data volumes are scaled up the savings could become even greater as the ratio of server size to total daily data volume becomes greater.
 However it is worth noting that the larger servers did have more capacity when the data volumes stopped, so the differences may also be slightly exaggerated.
 
-The three clusters here behave as expected.
-The smallest cluster's capacity, although it does move towards the larger ones as more instances are added to the cluster, stays far closer to the demand line.
-This is the worst-case scenario for the `t3a.xlarge` cluster, as 16GBs means it has to scale up to safely meet the demand of the simulation's data, but the second server stays mostly empty until end-of-day.
-The cluster will still have major savings over a `t3.2xlarge` with 32GB.
-
 Taking a look at Figure 3.5 we can intuitively split the day into three stages.
 
 
-1. End of Day - Market Open.
-2. Market Open - Market Close.
-3. Market Close - End of Day.
+1. End of Day to Market Open.
+2. Market Open to Market Close.
+3. Market Close to End of Day.
 
 Savings in the first stage will only be achieved by reducing the instance size.
 In the second stage savings look to be less significant, but could be achieved by both reducing server size and reducing the time in the queue of the servers.
@@ -1039,7 +1031,7 @@ The worst-case scenario in this stage is that the amount of data held by the las
 This will mean an entire RDB server will be sitting idle until end-of-day.
 To reduce the likelihood of this occurring it may be worth increasing the scale threshold and risking falling behind the tickerplant in the case of high data volumes.
 
-#### Threshold window comparison
+### Threshold window comparison
 
 To test the effects of the scale threshold on cost another stack was launched (also with four RDB clusters).
 In this stack all four clusters used `t3a.medium` EC2 instances (4GB) and a roll threshold of 85% was set.
@@ -1073,7 +1065,7 @@ The costs associated with each cluster were calculated below.
 | t3a.2xlarge | n/a | 32 | 7.21 | 0 |
 
 The 20 and 40% clusters and the 60 and 80% clusters started the same amount of servers as each other throughout the day.
-So we can compare their costs to analyze cost-efficiencies in the second stage.
+So we can compare their costs to analyze cost-efficiencies in the second stage (market-open to close).
 With differences of under 1% compared to the `t3.2xlarge` the cost savings we can make from this stage are not that significant.
 
 Comparing the difference between the two pairs we can see that costs jump from 44 to 49%.
