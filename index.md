@@ -41,10 +41,6 @@ When it comes to databases there are three main types of computing resources tha
 Scaling storage for our kdb+ databases can be relatively simple in the cloud.
 As the database grows we can provision extra storage volumes for our instances, or increase the size of the ones currently in use.
 
-Alternatively an elastic file system could be used.
-Amazon EFS is one example, it is a network file system (NFS) fully managed by AWS.
-As files are added to EFS AWS will automatically scale the size and throughput of the file system.
-
 Reading and writing data are prime use cases for scaling compute power within a kdb+ application.
 Scaling compute for reading has been covered by Rebecca Kelly in her blog post [Kx in the Public Cloud: Autoscaling using kdb+](https://kx.com/blog/kx-in-the-public-cloud-auto-scaling-using-kdb).
 Here Rebecca demonstrates how to scale the number of historical database (HDB) servers to handle an increasing or decreasing number of queries.
@@ -87,7 +83,7 @@ By ensuring this we can maintain the performance of a system at the lowest possi
 _<small>Figure 1.2: Potential cost savings of a scalable RDB </small>_
 
 It is worth noting that the number of servers you provision will have no real bearing on the overall cost.
-You will pay the same for running one server with 16GB of RAM as you would for running four servers with 4GB.
+For the most part, running one server with 16GB of RAM will cost the same as running four with 4GB.
 
 Below is an example of Amazon Web Service’s pricing for the varying sizes of its t3a instances.
 As you can see the price is largely proportional to the memory capacity of each instance.
@@ -147,8 +143,23 @@ An example YAML file to deploy this stack can be found in [Appendix 2](#2-cloudf
 
 #### AWS Elastic File System (EFS)
 
-We will want the RDB to be on a different server than the tickerplant but both processes will need access to the tickerplant’s logs.
-Writing the logs to EFS (a network file system) will mean the RDBs will be able to read the files as the tickerplant is writing them.
+In our system the RDB and tickerplant will be on different servers but both processes will need access to the tickerplant’s logs.
+For simplicity we will write the logs to EFS, a network file system which all of our EC2 instances can mount.
+
+In high volume systems EFS will not be fast enough for the tickerplant so it will need to write its logs to local disk.
+A separate process will then be needed on the server to read and stream the logs to the RDB in the case RDB replay.
+The code snippet below can be used to do so.
+
+```q
+.u.stream:{[tplog;start;end]
+    .u.i:0;
+    .u.start:start;
+    -11!(tplog;end);
+    delete i, start from `.u; }
+
+upd: {if[.u.start < .u.i+:1; neg[.z.w] @ (`upd;x;y); neg[.z.w][]]};
+```
+
 
 #### EC2 launch template
 
@@ -285,6 +296,11 @@ Throughout the day more data will be ingested by the tickerplant and added to th
 The ASG will increase the number of instances in the cluster throughout the day in order to hold this new data.
 At the end of the day, the day’s data will be flushed from memory and the ASG will scale the cluster in.
 
+#### Distributed RDBs
+
+This solution has one obvious difference to a regular kdb+ system in that there are multiple RDB servers.
+User queries will need to be parsed and routed to each one to ensure the data can be retrieved effectively.
+Engineering a solution for this is beyond the scope of this paper, but it will be tackled in the future.
 
 ### kdb+tick
 
@@ -603,6 +619,10 @@ It then marks the RDB as **rolled** and `.sub.i` is stored in the `lastI` column
 Finally `.u.asg.tab` is queried for the next RDB in the queue.
 If one is ready the tickerplant calls `.u.asg.add` making it the new **live** subscriber and the cycle continues.
 
+This switch to the new RDB may cause some latency in high volume systems.
+The switch itself will only take a moment but there may be some variability over the network as the tickerplant starts sending data to a new server.
+Implementing batching in the tickerplant could lessen this latency.
+
 ```q
 q).u.asg.tab
 time                          handle tabs syms ip         queue                                          live                          rolled                        firstI lastI
@@ -671,8 +691,7 @@ If the RDB is not live and it has flushed all of its data it will terminate its 
 
 .sub.end:{[dt]
     .sub.i: 0;
-    .sub.clear dt+1;
- };
+    .sub.clear dt+1; }
 
 / tm - clear all data from all tables before this time
 .sub.clear:{[tm]
@@ -836,6 +855,11 @@ The script then sets the global variables outlined below.
 ## Cost/risk analysis
 
 To determine how much cost savings our cluster of RDBs can make we will deploy the stack and simulate a day in the market.
+
+`t3` instances were used throughout this paper for simplicity.
+Their small sizes meant the clusters could scale in and out to demonstrate cost savings without using a huge amount of data.
+In reality they can incur a significant amount of excess costs due to their burstable performance.
+For production systems fixed cost instances like `r5`, `m5`, and `i3` should really be used.
 
 
 ### Initial simulation
@@ -1099,26 +1123,18 @@ Scale out when the first query is run | Useful because data is not needed until 
 
 The least complex way to run this solution would be in tandem with a write-down database (WDB) process.
 The RDBs will then not have to save down to disk at end-of-day so scaling in will be quicker.
-The complexity will also be greatly reduced.
+The complexity will also be reduced.
 If the RDBs were to write down at end-of-day a separate process would be needed to coordinate the writes of each one and sort and part the data.
 
-An elastic file system would also be needed for the multiple RDB servers to write to the HDB.
-This may cause issues on AWS in particular as EFS uses burst credits to distribute read and write throughput.
-These are accumulated over time but may be exhausted if all of the day’s data is written to disk in a short period of time.
-Provisioned throughput could be used but it can be quite expensive especially if we are only writing to disk at end-of-day.
-
 As the cluster will most likely be deployed alongside a WDB process an intra-day write-down solution could also be incorporated.
-If we were to write down to disk every hour, we could also scale in the number of RDBs in the cluster every hour by calling `.sub.clear` with the time of the intra-day write.
+If we were to write to the HDB every hour, the RDBs could then flush their data from memory allowing the cluster to scale in each time.
 
 Options for how to set up an intra-day write-down solution have been discussed in a previous whitepaper by Colm McCarthy, [Intraday writedown solutions](../intraday-writedown/index.md).
 
 #### Querying distributed RDBs
 
-This solution has one obvious difference to a regular kdb+ system in that there are multiple RDB servers.
-User queries will need to be parsed and routed to each one to ensure the data can be retrieved effectively.
-Engineering a solution for this is beyond the scope of this paper, but it may be tackled in the future.
-
-Once a gateway process is set up distributed RDBs could offer some advantages over a regular RDB:
+As discussed, building a gateway to query the RDBs is beyond the scope of this paper.
+When a gateway process is set up, distributed RDBs could offer some advantages over a regular RDB:
 
 - RDBs can be filtered out by the gateway pre-query based on which data sets they are holding.
 - Each RDB will be holding a fraction of the day’s data, decreasing query memory and duration.
