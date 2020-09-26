@@ -10,9 +10,9 @@
 
     .sub.live: 1b;
     (.[;();:;].) each schemas;
-    .sub.start: logWindow 0;
+
     `upd set .sub.replayUpd;
-    -11!(logWindow 1;tplog);
+    .sub.LS @ `.u.stream,tplog,logWindow;
     `upd set .sub.upd;
  };
 
@@ -20,14 +20,12 @@
 / only adds data from log window
 / monitors memory every 100 messages
 .sub.replayUpd:{[t;data]
-    if[.sub.i > .sub.start;
-        .sub.upd[t;flip data];
-        if[not .sub.i mod 100;
-                .util.lg "Replayed ",string[.sub.i]," messages";
+    .sub.upd[t;flip data];
+    if[not .sub.i mod 100;
+            .util.lg "Replayed ",string[.sub.i]," messages";
 
-                .sub.monitorMemory[]];
-        :(::);
-        ];
+            .sub.monitorMemory[];
+            ];
     .sub.i+: 1;
  };
 
@@ -39,28 +37,14 @@
 / check if a new server needs to be launched
 / then check if the process needs to unsubscribe
 .sub.monitorMemory:{[]
-    if[not .sub.scaled;
-        if[.util.getMemUsage[] > .sub.scaleThreshold;
-                .util.lg "Server has reached ",string[.sub.scaleThreshold],"% memory usage";
-                .util.lg "Scaling the Auto Scaling group";
-
-                .util.aws.scale .aws.groupName;
-                .sub.scaled: 1b;
-                ];
-        :(::);
-        ];
     if[.sub.live;
+        .util.lg "Checking Memory";
+
         if[.util.getMemUsage[] > .sub.rollThreshold;
-                .util.lg "Server has reached ",string[.sub.rollThreshold],"% memory usage";
+            .util.lg "Memory has breached .sub.rollThreshold - ",string .sub.rollThreshold;
 
                 .sub.roll[];
                 ];
-        ];
-    if[.sub.scaled and not max 0, count each get each tables[];
-            .util.lg "Process has rolled and has no data left";
-            .util.lg "Terminating instance from Auto Scaling group";
-
-            .util.aws.terminate .aws.instanceId;
         ];
  };
 
@@ -96,7 +80,6 @@
             .util.lg "Process has rolled and has no data left";
             .util.lg "Terminating instance from Auto Scaling group";
 
-            .util.aws.terminate .aws.instanceId;
+            while[1b; .util.aws.terminate .aws.instanceId; system"sleep 30" ];
             ];
-
  };

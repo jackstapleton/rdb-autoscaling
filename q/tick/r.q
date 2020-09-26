@@ -19,7 +19,7 @@ upd:insert;
 / HARDCODE \cd if other than logdir/db
 
 / connect to ticker plant for (schema;(logcount;log))
-.u.rep .(hopen `$":",.u.x 0)"(.u.sub[`;`];`.u `i`L)";
+.u.rep .(hopen `$":",.u.x 0)"(.u.sub[`MemUsage;`];`.u `i`L)";
 
 .z.ts: .util.hb;
 system "t 200";

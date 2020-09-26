@@ -25,8 +25,10 @@ sudo -i -u ec2-user git clone https://github.com/jackstapleton/rdb-autoscaling.g
 cd /opt/rdb-autoscaling
 git pull
 git fetch
-git checkout develop
+git checkout demo
+mkdir logs tplogs
 cd
+chown -R ec2-user:ec2-user /opt/rdb-autoscaling
 
 # set up dev env
 sudo -i -u ec2-user git clone https://github.com/jackstapleton/environments-setup.git ${USERHOME}/environments-setup

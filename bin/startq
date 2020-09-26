@@ -1,7 +1,10 @@
 #!/bin/bash
 
 q_dir=$(dirname $0)/../q
+
 log_dir=${q_dir}/logs
+mkdir -p $log_dir
+log_str=$(hostname).$(date +%y%m%dd%h%m%s)
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -22,30 +25,22 @@ if [[ "$app" == "" ]]; then
     exit 1
 fi
 
-tplog_dir=/mnt/efs/tplog
+tplog_dir=/opt/rdb-autoscaling/tplogs
 mkdir -p $tplog_dir
-
-log_file=${log_dir}/${app}.$(hostname).$(date +%Y%m%dD%H%M%S)
-mkdir -p $log_dir
-
 
 cd $q_dir
 
 case "$app" in
-    tick )
-        nohup q tick.q sym $tplog_dir -p 5010 > $log_file 2>&1 &
-        ;;
     tick-asg )
-        nohup q tickasg.q sym $tplog_dir -p 5010 > $log_file 2>&1 &
-        nohup q asg/feed.q :5010 -p 5011 > ${log_dir}/feed.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
-        ;;
-    r )
-        nohup q tick/r.q $TPHOST:5010 $GWHOST:5012 -p 5015 > $log_file 2>&1 &
-        nohup q asg/mon.q sym -p 5011 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
+        nohup q tickasg.q sym $tplog_dir -p 5010 > ${log_dir}/tickasg.${log_str} 2>&1 &
+        nohup q tick/r.q    :5010 -p 5011 > ${log_dir}/r.${log_str}    2>&1 &
+        nohup q asg/mon.q   :5010 -p 5012 > ${log_dir}/mon.${log_str}  2>&1 &
+        nohup q asg/feed.q  :5010 -p 5013 > ${log_dir}/feed.${log_str} 2>&1 &
+        nohup q asg/ls.q    :5010 -p 5014 > ${log_dir}/ls.${log_str}   2>&1 &
         ;;
     r-asg )
-        nohup q asg/r.q $TPHOST:5010 -p 5015 > $log_file 2>&1 &
-        nohup q asg/mon.q sym -p 5011 > ${log_dir}/mon.$(hostname).$(date +%Y%m%dD%H%M%S) 2>&1 &
+        nohup q asg/r.q   $TPHOST:5010 $TPHOST:5014 -p 5011 > ${log_dir}/rasg.${log_str} 2>&1 & 2>&1 &
+        nohup q asg/mon.q $TPHOST:5010 -p 5011 > ${log_dir}/mon.${log_str} 2>&1 &
         ;;
 esac
 
