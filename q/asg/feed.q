@@ -4,6 +4,7 @@ system"l asg/util.q"
 
 while[null .feed.TP: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 0; 0Ni]];
 
+.util.name:`feed;
 .feed.N:10000;
 
 .z.pc:{[h]

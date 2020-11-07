@@ -24,17 +24,19 @@ system "l asg/util.q"
                 .util.aws.scale .aws.groupName;
                 .mon.scaled: 1b;
                 ];
-        :(::);
         ];
  };
 
 
 / publish to the tickerplant
-.mon.sym:` sv .z.h, `$ getenv`APP;
+.mon.sym:` sv (`$getenv`APP),.z.h;
 .mon.pub:{ neg[.mon.TP] @ (`.u.upd; `MemUsage; .mon.sym,.util.free[][`Mem;`total`free`used]) };
 
 
 / set up timer
+
+.util.name:`mon;
+
 .z.ts:{[]
     .util.hb[];
     .mon.monitorMemory[];

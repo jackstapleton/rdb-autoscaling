@@ -1,5 +1,7 @@
 // asg/util.q
 
+system "c 30 250";
+
 .util.isAws: not .z.h like "desktop*";
 
 .util.free:{ {1!flip (`state, `$ x[0]) ! "SJJJJJJ"$ .[flip (x[1]; x[2], 3# enlist ""); (0;::); ssr[;":";""]]} (" " vs ' system "free") except\: enlist ""};
@@ -73,7 +75,7 @@
 / logging functions
 .util.const.ip: "." sv string `int$ 0x0 vs .z.a;
 .util.string: {$[not type x; .z.s each x; 10h = abs type x; x; string x]};
-.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;x);};
+.util.lg: {-1 " | " sv .util.string (.z.p;.util.const.ip;.util.name;x);};
 
 .util.tmp.hbTime: .z.p;
 .util.hb:{[]

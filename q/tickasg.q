@@ -1,6 +1,8 @@
 / q tickasg.q sym . -p 5001 </dev/null >foo 2>&1 &
 
 / launch kdb-tick and load .u.asg code
+.util.name:`$"tick-asg";
+
 system "l tick.q"
 system "l asg/u.q"
 

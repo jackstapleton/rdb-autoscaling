@@ -29,6 +29,7 @@ while[null .sub.LS: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 1; 0Ni] ];
 / e.g., neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
 neg[.sub.TP] @ (`.u.asg.sub; `Quote`Trade; ``; `$ .aws.groupName, ".r-asg");
 
+.util.name:`$"rdb-asg";
 .util.tmp.subTime: .z.p;
 .z.ts:{[]
     .util.hb[];
@@ -42,4 +43,3 @@ neg[.sub.TP] @ (`.u.asg.sub; `Quote`Trade; ``; `$ .aws.groupName, ".r-asg");
             ];
  };
 system "t 200";
-system "c 200 2000";

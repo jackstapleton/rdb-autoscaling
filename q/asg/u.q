@@ -92,7 +92,7 @@ sub:{subInner[x;y;.z.w]}
     if[not null first exec live from .u.asg.tab where handle = h; .u.asg.roll[h;0]];
     update handle:0Ni from `.u.asg.tab where handle = h;
 
-    show -20# .u.asg.tab;
+    show $[20 < count .u.asg.tab; .u.asg.tab; -20# .u.asg.tab];
     show .u.w
  };
 
@@ -107,6 +107,6 @@ sub:{subInner[x;y;.z.w]}
     delete from `.u.asg.tab where any (null handle; null live; not null rolled);
     update firstI:0 from `.u.asg.tab where not null live;
 
-    show -20# .u.asg.tab;
+    show $[20 < count .u.asg.tab; .u.asg.tab; -20# .u.asg.tab];
     show .u.w
  };
