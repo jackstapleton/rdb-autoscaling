@@ -2,12 +2,25 @@
 
 export USERHOME=/home/ec2-user
 
+# set up for rlwrap
+# to install rlwrap AWS Linux 2 requires python3.6 to be installed
+amazon-linux-extras enable python3
+yum clean metadata
+yum install python3-3.6.* --disablerepo=amzn2-core -y
+
+# Install rlwrap
+amazon-linux-extras enable epel
+yum clean metadata
+yum install -y epel-release
+yum install -y rlwrap
+echo "alias q=\"rlwrap q\"" >> ${USERHOME}/.bash_profile
+
 # install yum packages
-sudo yum update -y
-sudo yum install -y amazon-efs-utils
-sudo yum install -y git
-sudo yum install -y tmux
-sudo yum install -y tree
+yum update -y
+yum install -y amazon-efs-utils
+yum install -y git
+yum install -y tmux
+yum install -y tree
 
 # set up conda
 sudo -i -u ec2-user wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O ${USERHOME}/conda.sh
@@ -27,12 +40,17 @@ git pull
 git fetch
 git checkout demo
 mkdir logs tplogs
-cd
+cd $USERHOME
 chown -R ec2-user:ec2-user /opt/rdb-autoscaling
 
 # set up dev env
 sudo -i -u ec2-user git clone https://github.com/jackstapleton/environments-setup.git ${USERHOME}/environments-setup
 sudo -i -u ec2-user ${USERHOME}/environments-setup/dot-files/util/vim-install.sh
+
+# qremote
+sudo -i -u ec2-user git clone https://github.com/t-martin/qremote.git ${USERHOME}/qremote
+echo "export QREMOTE_HOME=${USERHOME}/qremote" >> ${USERHOME}/.bash_profile
+echo "alias qremote=\"${USERHOME}/qremote/bin/qremote\"" >> ${USERHOME}/.bash_profile
 
 # configure aws cli
 mkdir -p ${USERHOME}/.aws
