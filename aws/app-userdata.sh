@@ -7,7 +7,7 @@ export USERHOME=/home/ec2-user
 cd /opt/rdb-autoscaling
 git pull
 git fetch
-git checkout develop
+git checkout demo
 cd
 
 # configure aws cli
@@ -45,5 +45,8 @@ NUM=$(sudo -i -u ec2-user asg_get_desired_capacity $ASG)
 NEWNAME=${NAME}-${NUM}-$(sudo -i -u ec2-user date +%Y%m%dD%H%M%S)
 sudo -i -u $KDBUSER aws ec2 create-tags --resources $INSTANCEID --tags Key=Name,Value=$NEWNAME
 
-# start app
-sudo -i -u $KDBUSER /opt/rdb-autoscaling/bin/startq --app $APP --log-dir /opt/rdb-autoscaling/logs
+# start app if its an rdb
+
+if [[ "$app" == "r-asg"]] ; then
+    sudo -i -u $KDBUSER /opt/rdb-autoscaling/bin/startq --app $APP --log-dir /opt/rdb-autoscaling/logs
+fi

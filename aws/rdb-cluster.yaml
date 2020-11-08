@@ -126,6 +126,27 @@ Resources:
       Roles:
         - !Ref IAMRole
 
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Security Group to allow SSH and TCP access for EC2 servers'
+      GroupName: !Sub '${AWS::Region}.${AWS::StackName}.ec2-sg'
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+      VpcId: !Ref VPCID
+  EC2SecurityGroupTcpIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: EC2SecurityGroup
+    Properties:
+      GroupId: !Ref EC2SecurityGroup
+      FromPort: 5010
+      IpProtocol: tcp
+      ToPort: 5020
+      SourceSecurityGroupId: !Ref EC2SecurityGroup
+
   TickASG:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:

@@ -21,6 +21,7 @@ upd:{[t;x] if[t~`MemUsage;t insert x]}
 / connect to ticker plant for (schema;(logcount;log))
 .u.rep .(hopen `$":",.u.x 0)"(.u.sub[`MemUsage;`];`.u `i`L)";
 
+.u.snap:{[x] select from x[0]}
 .util.name:`rdb;
 .z.ts: .util.hb;
 system "t 200";
