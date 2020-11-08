@@ -2,6 +2,8 @@
 /2008.09.09 .k ->.q
 
 system "l asg/util.q";
+system "l tick/u.q";
+.u.init[];
 
 if[not "w"=first string .z.o;system "sleep 1"];
 
@@ -27,6 +29,5 @@ upd:{[t;x] if[t~`MemUsage;t insert x;.u.pub[t;x]] }
 system "t 200";
 
 / kx dashboards set up
-system "l tick/u.q";
-system "x .z.pc";
 .u.snap:{select from x[0]};
+.u.init[];
