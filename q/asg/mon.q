@@ -16,12 +16,15 @@ system "l asg/util.q"
 
 .mon.monitorMemory:{[]
     if[not .mon.scaled;
-        .util.lg "Checking memory";
+        mem:.util.getMemUsage[];
+        .util.lg "Memory Usage is - ",string[mem],"%";
 
-        if[.util.getMemUsage[] > .mon.scaleThreshold;
-                .util.lg "Memory has breached .mon.scaleThreshold - ", string .mon.scaleThreshold;
+        if[mem > .mon.scaleThreshold;
+                .util.lg "Memory has breached .mon.scaleThreshold - ",string .mon.scaleThreshold;
 
                 .util.aws.scale .aws.groupName;
+
+                .util.lg "Incremented Desired Capacity of ",.aws.groupName;
                 .mon.scaled: 1b;
                 ];
         ];

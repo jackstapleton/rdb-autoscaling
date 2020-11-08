@@ -27,7 +27,7 @@ while[null .sub.LS: @[{hopen (`$":", .u.x: x; 5000)}; .z.x 1; 0Ni] ];
 / tickerplant kicks off log replay
 / so duplicate .u.asg.sub calls cannot be made at
 / e.g., neg[.sub.TP] (`.u.asg.sub;`Quote`Trade;(`;`GM`MSFT`APPL`JPM);`shard4)
-neg[.sub.TP] @ (`.u.asg.sub; `Quote`Trade; ``; `$ .aws.groupName, ".r-asg");
+neg[.sub.TP] @ (`.u.asg.sub; `MemUsage`Quote`Trade; ```; `$ .aws.groupName, ".r-asg");
 
 .util.name:`$"rdb-asg";
 .util.tmp.subTime: .z.p;

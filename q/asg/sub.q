@@ -20,7 +20,7 @@
 / only adds data from log window
 / monitors memory every 100 messages
 .sub.replayUpd:{[t;data]
-    .sub.upd[t;flip data];
+    .sub.upd[t;flip (),/:data];
     if[not .sub.i mod 100;
             .util.lg "Replayed ",string[.sub.i]," messages";
 
@@ -31,7 +31,7 @@
 
 / regular upd function
 / must keep track of upd message count
-.sub.upd: {.sub.i+: 1; x upsert y;};
+.sub.upd: {.sub.i+: 1;x upsert y;};
 
 / monitor server memory
 / check if a new server needs to be launched
