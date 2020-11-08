@@ -59,7 +59,7 @@ sub:{subInner[x;y;.z.w]}
 .u.asg.add:{[t;s;h]
     .util.lg "Adding process on handle ",string[h]," to .u.w";
 
-    schemas: raze .u.subInner[;;h] .' flip (t;s);
+    schemas: .u.subInner[;;h] .' flip (t;s);
     q: first exec queue from .u.asg.tab where handle = h;
     startI: max 0^ exec lastI from .u.asg.tab where queue = q;
     neg[h] (`.sub.rep; schemas; .u.L; (startI; .u.i));

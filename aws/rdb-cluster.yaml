@@ -209,6 +209,13 @@ Resources:
         - Key: APP
           PropagateAtLaunch: True
           Value: r-asg
+        - Key: SCALETHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref SCALETHRESHOLD
+        - Key: ROLLTHRESHOLD
+          PropagateAtLaunch: True
+          Value: !Ref ROLLTHRESHOLD
+
       VPCZoneIdentifier:
         - !Ref SUBNETID
 

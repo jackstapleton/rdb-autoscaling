@@ -1,3 +1,8 @@
+/ set up logging
+system "l asg/util.q"
+system "t 1000"
+.util.name:`logstreamer
+.z.ts:.util.hb
 
 / (`.u.stream; `:tplog/sym2020.01.01; 100; 200)
 .u.stream:{[tplog;start;end]
