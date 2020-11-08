@@ -47,6 +47,6 @@ sudo -i -u $KDBUSER aws ec2 create-tags --resources $INSTANCEID --tags Key=Name,
 
 # start app if its an rdb
 
-if [[ "$app" == "r-asg"]] ; then
+if [[ "$app" == "r-asg" ]] ; then
     sudo -i -u $KDBUSER /opt/rdb-autoscaling/bin/startq --app $APP --log-dir /opt/rdb-autoscaling/logs
 fi
