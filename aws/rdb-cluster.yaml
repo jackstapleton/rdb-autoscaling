@@ -126,56 +126,6 @@ Resources:
       Roles:
         - !Ref IAMRole
 
-  EfsSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: 'Security Group to allow EFS to be mounted by EC2 Instances'
-      GroupName: !Sub '${AWS::Region}.${AWS::StackName}.efs-sg'
-      SecurityGroupIngress:
-        - FromPort: 2049
-          IpProtocol: tcp
-          ToPort: 2049
-          SourceSecurityGroupId: !Ref EC2SecurityGroup
-      VpcId: !Ref VPCID
-
-  EC2SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: 'Security Group to allow SSH and TCP access for EC2 servers'
-      GroupName: !Sub '${AWS::Region}.${AWS::StackName}.ec2-sg'
-      SecurityGroupIngress:
-        - CidrIp: 0.0.0.0/0
-          FromPort: 22
-          IpProtocol: tcp
-          ToPort: 22
-      VpcId: !Ref VPCID
-  EC2SecurityGroupTcpIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    DependsOn: EC2SecurityGroup
-    Properties:
-      GroupId: !Ref EC2SecurityGroup
-      FromPort: 5010
-      IpProtocol: tcp
-      ToPort: 5020
-      SourceSecurityGroupId: !Ref EC2SecurityGroup
-
-  EfsFileSystem:
-    Type: AWS::EFS::FileSystem
-    Properties:
-      Encrypted: False
-      FileSystemTags:
-        - Key: Name
-          Value: !Sub '${AWS::Region}-${AWS::StackName}-efs'
-      PerformanceMode: generalPurpose
-      ThroughputMode: bursting
-  EfsMountTarget:
-    Type: AWS::EFS::MountTarget
-    Properties:
-      FileSystemId: !Ref EfsFileSystem
-      SecurityGroups:
-        - !Ref EfsSecurityGroup
-      SubnetId: !Ref SUBNETID
-
   TickASG:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
@@ -192,9 +142,6 @@ Resources:
         - Key: APP
           PropagateAtLaunch: True
           Value: tick-asg
-        - Key: EFS
-          PropagateAtLaunch: True
-          Value: !GetAtt EfsMountTarget.IpAddress
       VPCZoneIdentifier:
         - !Ref SUBNETID
 
@@ -241,9 +188,6 @@ Resources:
         - Key: APP
           PropagateAtLaunch: True
           Value: r-asg
-        - Key: EFS
-          PropagateAtLaunch: True
-          Value: !GetAtt EfsMountTarget.IpAddress
       VPCZoneIdentifier:
         - !Ref SUBNETID
 

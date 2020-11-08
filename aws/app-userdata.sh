@@ -20,7 +20,6 @@ echo -e "source /opt/rdb-autoscaling/aws/ec2-utils.sh\n" >> ${USERHOME}/.bash_pr
 
 export INSTANCEID=$(ec2-metadata -i | cut -d ' ' -f 2)
 export APP=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID APP)
-export EFS=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID EFS)
 export SCALETHRESHOLD=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID SCALETHRESHOLD)
 export ROLLTHRESHOLD=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID ROLLTHRESHOLD)
 export STACK=$(sudo -i -u ec2-user ec2_get_instance_tag $INSTANCEID aws:cloudformation:stack-name)
@@ -33,7 +32,6 @@ done
 # send envvars to bash profile
 echo "export INSTANCEID=$INSTANCEID" >> ${USERHOME}/.bash_profile
 echo "export APP=$APP" >> ${USERHOME}/.bash_profile
-echo "export EFS=$EFS" >> ${USERHOME}/.bash_profile
 echo "export SCALETHRESHOLD=$SCALETHRESHOLD" >> ${USERHOME}/.bash_profile
 echo "export ROLLTHRESHOLD=$ROLLTHRESHOLD" >> ${USERHOME}/.bash_profile
 echo "export STACK=$STACK" >> ${USERHOME}/.bash_profile
