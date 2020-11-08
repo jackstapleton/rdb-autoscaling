@@ -3,11 +3,6 @@
 
 system "l asg/util.q";
 
-/ kx dashboards set up
-system "l tick/u.q";
-system "x .z.pc";
-.u.snap:{select from x[0]};
-
 if[not "w"=first string .z.o;system "sleep 1"];
 
 upd:{[t;x] if[t~`MemUsage;t insert x]}
@@ -30,3 +25,8 @@ upd:{[t;x] if[t~`MemUsage;t insert x]}
 .util.name:`rdb;
 .z.ts: .util.hb;
 system "t 200";
+
+/ kx dashboards set up
+system "l tick/u.q";
+system "x .z.pc";
+.u.snap:{select from x[0]};
