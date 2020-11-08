@@ -5,7 +5,7 @@ system "l asg/util.q";
 
 if[not "w"=first string .z.o;system "sleep 1"];
 
-upd:insert;
+upd:{[t;x] if[t~`MemUsage;t insert x]}
 
 / get the ticker plant and history ports, defaults are 5010,5012
 .u.x:.z.x,(count .z.x)_(":5010";":5012");
@@ -15,11 +15,11 @@ upd:insert;
 .u.end:{t:tables`.;![;enlist(<;`time;x);0b;`$()]each t;@[;`sym;`g#]each t;}
 
 / init schema and sync up from log file;cd to hdb(so client save can run)
-.u.rep:{(.[;();:;].)each x;if[null first y;:()];-11!y;system "cd ",1_-10_string first reverse y};
+.u.rep:{(.[;();:;].) x;if[null first y;:()];-11!y;system "cd ",1_-10_string first reverse y};
 / HARDCODE \cd if other than logdir/db
 
 / connect to ticker plant for (schema;(logcount;log))
-.u.rep .(hopen `$":",.u.x 0)"(.u.sub[`;`];`.u `i`L)";
+.u.rep .(hopen `$":",.u.x 0)"(.u.sub[`MemUsage;`];`.u `i`L)";
 
 .util.name:`rdb;
 .z.ts: .util.hb;

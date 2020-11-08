@@ -34,10 +34,9 @@ cd $q_dir
 case "$app" in
     tick-asg )
         nohup q tickasg.q sym $tplog_dir -p 5010 > ${log_dir}/tickasg.${log_str} 2>&1 &
-        nohup q tick/r.q    :5010 -p 5011 > ${log_dir}/r.${log_str}    2>&1 &
-        nohup q asg/mon.q   :5010 -p 5012 > ${log_dir}/mon.${log_str}  2>&1 &
-        nohup q asg/feed.q  :5010 -p 5013 > ${log_dir}/feed.${log_str} 2>&1 &
-        nohup q asg/ls.q    :5010 -p 5014 > ${log_dir}/ls.${log_str}   2>&1 &
+        nohup q tick/r.q   :5010 -p 5011 > ${log_dir}/r.${log_str}    2>&1 &
+        nohup q asg/feed.q :5010 -p 5013 > ${log_dir}/feed.${log_str} 2>&1 &
+        nohup q asg/ls.q -p 5014 > ${log_dir}/ls.${log_str}   2>&1 &
         ;;
     r-asg )
         nohup q asg/r.q   $TPHOST:5010 $TPHOST:5014 -p 5011 > ${log_dir}/rasg.${log_str} 2>&1 & 2>&1 &
