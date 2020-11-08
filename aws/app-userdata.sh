@@ -8,7 +8,7 @@ cd /opt/rdb-autoscaling
 git pull
 git fetch
 git checkout demo
-cd
+cd $USERHOME
 
 # configure aws cli
 AZ=$(ec2-metadata -z | cut -d ' ' -f 2)
@@ -47,6 +47,6 @@ sudo -i -u $KDBUSER aws ec2 create-tags --resources $INSTANCEID --tags Key=Name,
 
 # start app if its an rdb
 
-if [[ "$app" == "r-asg" ]] ; then
+if [[ "$APP" == "r-asg" ]] ; then
     sudo -i -u $KDBUSER /opt/rdb-autoscaling/bin/startq --app $APP --log-dir /opt/rdb-autoscaling/logs
 fi
