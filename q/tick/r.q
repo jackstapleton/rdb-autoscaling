@@ -5,7 +5,7 @@ system "l asg/util.q";
 
 if[not "w"=first string .z.o;system "sleep 1"];
 
-upd:{[t;x] if[t~`MemUsage;t insert x]}
+upd:{[t;x] if[t~`MemUsage;t insert x;.u.pub[t;x]] }
 
 / get the ticker plant and history ports, defaults are 5010,5012
 .u.x:.z.x,(count .z.x)_(":5010";":5012");
