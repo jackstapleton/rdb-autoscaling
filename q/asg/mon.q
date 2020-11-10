@@ -46,4 +46,4 @@ system "l asg/util.q"
     .mon.pub[];
  };
 
-system "t 500"
+system "t 250"
