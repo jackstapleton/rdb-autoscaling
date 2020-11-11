@@ -21,9 +21,9 @@ system "l asg/util.q"
 
         if[mem > .mon.scaleThreshold;
                 .util.lg "Memory has breached .mon.scaleThreshold - ",string .mon.scaleThreshold;
-
+                .mon.scaled: 1b;
                 .util.aws.scale .aws.groupName;
-
+                .mon.scaled: 1b;
                 .util.lg "Incremented Desired Capacity of ",.aws.groupName;
                 .mon.scaled: 1b;
                 ];
